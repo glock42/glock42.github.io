@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>我对于动态规划的理解 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言动态规划很早就接触过了，但一直都心存疑惑。网上的一些文章，基本都是满篇术语。状态转移， 状态方程，这种名词，其实是让初学者比较迷惑。直到我上完Berkeley的CS 61 A, 突然就理解了所谓的动态规划。或者说是真正的理解了递归。把玩函数式语言对理解递归，或者说程序结构，非常有帮助。SICP 这本书已经很多人推荐了，用Scheme讲的，我没看完，看了大概前面两章。我比较推荐的是华盛顿大学的P">
+<meta name="keywords" content="Algorithm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="我对于动态规划的理解">
+<meta property="og:url" content="http://yoursite.com/2016/10/12/我对于动态规划的理解/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="前言动态规划很早就接触过了，但一直都心存疑惑。网上的一些文章，基本都是满篇术语。状态转移， 状态方程，这种名词，其实是让初学者比较迷惑。直到我上完Berkeley的CS 61 A, 突然就理解了所谓的动态规划。或者说是真正的理解了递归。把玩函数式语言对理解递归，或者说程序结构，非常有帮助。SICP 这本书已经很多人推荐了，用Scheme讲的，我没看完，看了大概前面两章。我比较推荐的是华盛顿大学的P">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-04-15T14:49:01.370Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="我对于动态规划的理解">
+<meta name="twitter:description" content="前言动态规划很早就接触过了，但一直都心存疑惑。网上的一些文章，基本都是满篇术语。状态转移， 状态方程，这种名词，其实是让初学者比较迷惑。直到我上完Berkeley的CS 61 A, 突然就理解了所谓的动态规划。或者说是真正的理解了递归。把玩函数式语言对理解递归，或者说程序结构，非常有帮助。SICP 这本书已经很多人推荐了，用Scheme讲的，我没看完，看了大概前面两章。我比较推荐的是华盛顿大学的P">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-我对于动态规划的理解" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/10/12/我对于动态规划的理解/" class="article-date">
+  <time datetime="2016-10-12T06:06:06.000Z" itemprop="datePublished">2016-10-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      我对于动态规划的理解
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>动态规划很早就接触过了，但一直都心存疑惑。网上的一些文章，基本都是满篇术语。<code>状态转移</code>， <code>状态方程</code>，这种名词，其实是让初学者比较迷惑。直到我上完<code>Berkeley</code>的<a href="http://cs61a.org/" target="_blank" rel="noopener">CS 61 A</a>, 突然就理解了所谓的动态规划。或者说是真正的理解了递归。把玩函数式语言对理解递归，或者说程序结构，非常有帮助。<a href="https://www.amazon.cn/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%9E%84%E9%80%A0%E5%92%8C%E8%A7%A3%E9%87%8A/dp/B0011AP7RY/ref=sr_1_1?s=books&amp;ie=UTF8&amp;qid=1476242304&amp;sr=1-1&amp;keywords=SICP" target="_blank" rel="noopener">SICP</a> 这本书已经很多人推荐了，用<code>Scheme</code>讲的，我没看完，看了大概前面两章。我比较推荐的是<code>华盛顿大学</code>的<a href="http://courses.cs.washington.edu/courses/cse341/16sp/" target="_blank" rel="noopener">Programming Languages</a> 还有上面<code>Berkeley</code>那门课。</p>
+<h2 id="动态规划"><a href="#动态规划" class="headerlink" title="动态规划"></a>动态规划</h2><p>我认为所谓的动态规划，就是递归的记忆化过程。这里必须要提一个函数式语言的好处，支持<code>尾递归</code>。<code>尾递归</code>可以用来防止重复计算。可惜很多语言并不支持，很容易就栈溢出了，比如<code>JAVA</code> ，<code>Python</code>。所以需要把递归改写成循环形式。其实本质还是和尾递归一样。<br><a id="more"></a></p>
+<h3 id="斐波那契"><a href="#斐波那契" class="headerlink" title="斐波那契"></a>斐波那契</h3><p>首先我门先写一个递归版的斐波那契。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">fib</span><span class="params">(<span class="keyword">int</span> n)</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (n == <span class="number">1</span> || n == <span class="number">2</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">return</span> fib(n -<span class="number">1</span>) + fib(n -<span class="number">2</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个函数有大量的重复计算。是个树形结构。比如计算<code>fib(10)</code>，那么他会分别计算<code>fib(9)</code>,<code>fib(8)</code>,当计算<code>fib(9)</code>时，会计算<code>fib(8)</code>,<code>fib(7)</code>,<code>fib(6)</code>…但是当计算<code>fib(8)</code>时，上面的计算过程又要重复一遍。</p>
+<p>我测试了一下<code>fib(50)</code>，已经要等很久才出结果了。</p>
+<p>接下来我们改写它。把计算的过程储存起来。也就是<code>记忆化</code>。</p>
+<h4 id="变形一"><a href="#变形一" class="headerlink" title="变形一"></a>变形一</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> N = <span class="number">100</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">double</span>[] fibs = <span class="keyword">new</span> <span class="keyword">double</span>[N];</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">double</span> <span class="title">fib</span><span class="params">(<span class="keyword">int</span> n)</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (n == <span class="number">1</span> || n == <span class="number">2</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (fibs[n] != <span class="number">0</span>) <span class="keyword">return</span> fibs[n];</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">return</span> fibs[n] = fib(n -<span class="number">1</span>) + fib(n -<span class="number">2</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>很简单。多开了个数组来保存已经计算过的值。节省大量重复的计算。<code>fib(50)</code>可以秒算。这其实就是一个动态规划的过程。注意这里有两个比较动态规划比较重要的特性。也就是<code>重叠子问题</code> 和<code>最优子结构</code>。比如说斐波那契的每一个数，都是依靠前面两个数的和计算得出，也就是<code>最优子结构</code>。但如果不记忆化，就会有大量重复计算，这就是<code>重叠子问题</code> 。</p>
+<p>接下来我们再来看一个尾递归版，但是注意<code>JAVA</code>并不支持尾递归，容易栈溢出。这里只做演示。</p>
+<h4 id="变形二"><a href="#变形二" class="headerlink" title="变形二"></a>变形二</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">double</span> <span class="title">fib_tail</span><span class="params">(<span class="keyword">int</span> n, <span class="keyword">double</span> a, <span class="keyword">double</span> b)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (n == <span class="number">1</span> || n == <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> b;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> fib_tail(n - <span class="number">1</span>, b, a + b);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过把计算结果保存到参数中，来简化计算结果。其实原理和上面开数组是一样的。也可以秒算<code>fib_tail(50,1,1)</code> 。</p>
+<h4 id="变形三"><a href="#变形三" class="headerlink" title="变形三"></a>变形三</h4><p>第三种方法直接用循环来做。既节省递归切换的时间，又避免了尾递归栈溢出的烦恼。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">double</span> <span class="title">fib3</span><span class="params">(<span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">double</span> a = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">double</span> b = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">double</span> c;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; n; i++) &#123;</span><br><span class="line">        c = a + b;</span><br><span class="line">        a = b;</span><br><span class="line">        b = c;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其实就是这么简单。下面看一个略复杂的。</p>
+<h3 id="House-Robber"><a href="#House-Robber" class="headerlink" title="House Robber"></a>House Robber</h3><p><a href="https://leetcode.com/problems/house-robber/" target="_blank" rel="noopener">House Robber</a> 。大概意思就是给你个数组，挑一串数字使和最大化，但每两个数不能相邻。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123; </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span>[] robs;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">rob</span><span class="params">(<span class="keyword">int</span>[] nums)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(nums == <span class="keyword">null</span> || nums.length == <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        robs = <span class="keyword">new</span> <span class="keyword">int</span>[nums.length];</span><br><span class="line">        Arrays.fill(robs,-<span class="number">1</span>);</span><br><span class="line">        <span class="keyword">return</span> rob(nums,<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">rob</span><span class="params">(<span class="keyword">int</span>[] nums, <span class="keyword">int</span> i)</span></span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (i &gt;= nums.length) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">if</span> (robs[i] != -<span class="number">1</span>) <span class="keyword">return</span> robs[i];</span><br><span class="line">        <span class="keyword">int</span> max = Integer.max(rob(nums,i+<span class="number">1</span>),nums[i] + rob(nums,i+<span class="number">2</span>));</span><br><span class="line">        <span class="keyword">return</span> robs[i] = max;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这是我的版本。我更喜欢用递归来描述问题。思路是数组里的每一数，我有两种选择，选或者不选，选了这个就不能选下一个，递归的求解，然后进行比较，选取较大的大个，并且用数组记忆结果。这就是所谓带备忘的<code>自顶向下法</code>。</p>
+<p>再给出一种方法，我在<code>LeetCode</code>论坛找的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">rob</span><span class="params">(<span class="keyword">int</span>[] nums)</span> </span>&#123;  </span><br><span class="line">    <span class="keyword">if</span>(nums.length==<span class="number">0</span>) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span>(nums.length==<span class="number">1</span>) <span class="keyword">return</span> nums[<span class="number">0</span>];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//Initialize an arrays to store the money</span></span><br><span class="line">	<span class="keyword">int</span>[] mark = <span class="keyword">new</span> <span class="keyword">int</span>[nums.length];</span><br><span class="line"></span><br><span class="line">    <span class="comment">//We can infer the formula from problem:mark[i]=max(num[i]+mark[i-2],mark[i-1])</span></span><br><span class="line">    <span class="comment">//so initialize two nums at first.</span></span><br><span class="line">	mark[<span class="number">0</span>] = nums[<span class="number">0</span>];</span><br><span class="line">	mark[<span class="number">1</span>] = Math.max(nums[<span class="number">0</span>], nums[<span class="number">1</span>]);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//Using Dynamic Programming to mark the max money in loop.</span></span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">2</span>;i&lt;nums.length;i++)&#123;</span><br><span class="line">		mark[i] = Math.max(nums[i]+mark[i-<span class="number">2</span>], mark[i-<span class="number">1</span>]);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> mark[nums.length-<span class="number">1</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里注释很清楚，不多做解释。这种方法也就是所谓的<code>自底向上法</code>，不需要递归切换，速度会比上面那种快。</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>当然，如果你需要熟练掌握动态规划，必须进行大量的练习。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>《算法导论》</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/10/12/我对于动态规划的理解/" data-id="cjg0y8s0m0010l35yn4v83ad5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Algorithm/">Algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2016/10/30/生成学习算法/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          生成学习算法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/09/27/MIT 6.824 lab1/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">MIT 6.824 lab1</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Algorithm/">Algorithm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Computer-Network/">Computer Network</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Database-System/">Database System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-Computing/">Distributed Computing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT-6-828/">MIT 6.828</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Operating-system/">Operating system</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/杂/">杂</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Algorithm/" style="font-size: 20px;">Algorithm</a> <a href="/tags/Android/" style="font-size: 16px;">Android</a> <a href="/tags/Computer-Network/" style="font-size: 10px;">Computer Network</a> <a href="/tags/Database-System/" style="font-size: 10px;">Database System</a> <a href="/tags/Distributed-Computing/" style="font-size: 10px;">Distributed Computing</a> <a href="/tags/Distributed-System/" style="font-size: 10px;">Distributed System</a> <a href="/tags/Java/" style="font-size: 12px;">Java</a> <a href="/tags/MIT-6-828/" style="font-size: 14px;">MIT 6.828</a> <a href="/tags/Machine-Learning/" style="font-size: 12px;">Machine Learning</a> <a href="/tags/Operating-system/" style="font-size: 18px;">Operating system</a> <a href="/tags/Tomcat/" style="font-size: 10px;">Tomcat</a> <a href="/tags/杂/" style="font-size: 10px;">杂</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">September 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">July 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">June 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/04/">April 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">March 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/06/11/Raft 共识算法/">Raft 共识算法</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/30/数据库事务与并发控制/">数据库事务与并发控制</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/18/计算机网络自顶向下之可靠传输协议的笔记/">计算机网络自顶向下之可靠传输协议的笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/07/MIT 6.828 lab5/">MIT 6.828 lab5</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/02/MIT 6.828 lab4/">MIT 6.828 lab4</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

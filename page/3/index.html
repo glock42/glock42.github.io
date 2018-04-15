@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/page/3/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:locale" content="default">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-复杂排序之归并、快速、三向切分、堆排序 详细总结" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/03/16/复杂排序之归并、快速、三向切分、堆排序 详细总结/" class="article-date">
+  <time datetime="2016-03-16T07:13:06.000Z" itemprop="datePublished">2016-03-16</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/03/16/复杂排序之归并、快速、三向切分、堆排序 详细总结/">复杂排序之归并、快速、三向切分、堆排序 详细总结</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="归并排序-MergeSort"><a href="#归并排序-MergeSort" class="headerlink" title="归并排序(MergeSort)"></a>归并排序(MergeSort)</h2><p>复杂度<code>O(nlogn)</code>.</p>
+<p>核心思想就是采用分而治之的方法，递归的合并两个有序的数组。效率比较高，缺点是空间复杂度高，会用到额外的数组。</p>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>核心代码是合并的函数。合并的前提是保证左右两边的数组分别有序，在合并之前和之后在<code>Java</code>中我们可以用断言来保证数组有序。</p>
+<p>合并的原理其实也很简单，先把<code>a</code>数组中的内容复制到额外储存的<code>temp</code>数组中去。分别用两个<code>index</code>指向<code>a</code>数组的起始位置和中间位置，保证<code>a</code>数组左右两边有序，比如<code>i</code>，<code>j</code>。现在开始从头扫描比较左右两个数组,若<code>a[i]&amp;lt;=a[j]</code>，则把<code>a[i]</code>放到<code>temp</code>数组中去，且<code>i</code>向前走一步。反正则放<code>a[j]</code>，且<code>j</code>走一步。若其中一个数组走完了，则把另一个数组剩余的数直接放到temp数组中。</p>
+<p>我们用递归的方式来实现左右两边有序。递归到数组只有1个数时肯定是有序的，再合并2个数，再退出来合并4个数，以此类推。</p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/sortMerge-sort-example-300px.gif" alt=""></p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/sortQQ%E6%88%AA%E5%9C%9620160316182738.jpg" alt=""><br>
+        
+          <p class="article-more-link">
+            <a href="/2016/03/16/复杂排序之归并、快速、三向切分、堆排序 详细总结/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/03/16/复杂排序之归并、快速、三向切分、堆排序 详细总结/" data-id="cjg0y8s0l000zl35y5sxkmg2j" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Algorithm/">Algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-简单排序之冒泡、选择、插入、希尔详细总结" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/03/13/简单排序之冒泡、选择、插入、希尔详细总结/" class="article-date">
+  <time datetime="2016-03-13T07:13:06.000Z" itemprop="datePublished">2016-03-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/03/13/简单排序之冒泡、选择、插入、希尔详细总结/">简单排序之冒泡、选择、插入、希尔详细总结</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文讲述一些简单算法的实现和效率比较。所有代码用<code>java</code>实现。用到的两个基本的<code>api</code>代码如下。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">less</span><span class="params">(Comparable v,Comparable w)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> v.compareTo(w) &lt;<span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">exch</span><span class="params">(Comparable[] a,<span class="keyword">int</span> i,<span class="keyword">int</span> j)</span></span>&#123;</span><br><span class="line">    Comparable temp = a[i];</span><br><span class="line">    a[i] = a[j];</span><br><span class="line">    a[j] = temp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+        
+          <p class="article-more-link">
+            <a href="/2016/03/13/简单排序之冒泡、选择、插入、希尔详细总结/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/03/13/简单排序之冒泡、选择、插入、希尔详细总结/" data-id="cjg0y8s0x001kl35ypwj2zkdy" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Algorithm/">Algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Union-Find" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/03/12/Union-Find/" class="article-date">
+  <time datetime="2016-03-12T07:13:06.000Z" itemprop="datePublished">2016-03-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/03/12/Union-Find/">Union-Find</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>开始刷<code>Coursera</code>的<code>Algorithms</code>课，在此尽量为每个<code>Lectures</code>写篇笔记。</p>
+<h2 id="Union-Find"><a href="#Union-Find" class="headerlink" title="Union-Find"></a>Union-Find</h2><p>并查集，顾名思义，主要两个操作。</p>
+<ul>
+<li><code>union</code>  合并两个集合</li>
+<li><code>find</code>   查询两个对象是否属于一个集合</li>
+</ul>
+<p>一个集合称为<code>Connected components</code>.</p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/union-find2.jpg" alt=""><br>
+        
+          <p class="article-more-link">
+            <a href="/2016/03/12/Union-Find/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/03/12/Union-Find/" data-id="cjg0y8s0i000tl35ypcv4jlze" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Algorithm/">Algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Java static 初始化顺序" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/03/02/Java static 初始化顺序/" class="article-date">
+  <time datetime="2016-03-02T07:13:06.000Z" itemprop="datePublished">2016-03-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/03/02/Java static 初始化顺序/">Java static 初始化顺序</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在之前用<code>java</code>的时候，总是对<code>static</code>的初始化顺序存有疑惑，今天在重撸<code>Thinking in Java</code>,一下子豁然开朗，特此做下笔记。</p>
+<h2 id="初始化顺序"><a href="#初始化顺序" class="headerlink" title="初始化顺序"></a>初始化顺序</h2><p>类内，总是先初始化字段，字段定义的先后顺序决定了初始化的顺序，然后再初始化构造器。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// When the constructor is called to create a</span></span><br><span class="line"><span class="comment">// Window object, you'll see a message:</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Window</span> </span>&#123;</span><br><span class="line">  Window(<span class="keyword">int</span> marker) &#123; print(<span class="string">"Window("</span> + marker + <span class="string">")"</span>); &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">House</span> </span>&#123;</span><br><span class="line">  Window w1 = <span class="keyword">new</span> Window(<span class="number">1</span>); <span class="comment">// Before constructor</span></span><br><span class="line">  House() &#123;</span><br><span class="line">    <span class="comment">// Show that we're in the constructor:</span></span><br><span class="line">    print(<span class="string">"House()"</span>);</span><br><span class="line">    w3 = <span class="keyword">new</span> Window(<span class="number">33</span>); <span class="comment">// Reinitialize w3</span></span><br><span class="line">  &#125;</span><br><span class="line">  Window w2 = <span class="keyword">new</span> Window(<span class="number">2</span>); <span class="comment">// After constructor</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; print(<span class="string">"f()"</span>); &#125;</span><br><span class="line">  Window w3 = <span class="keyword">new</span> Window(<span class="number">3</span>); <span class="comment">// At end</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">OrderOfInitialization</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    House h = <span class="keyword">new</span> House();</span><br><span class="line">    h.f(); <span class="comment">// Shows that construction is done</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125; </span><br><span class="line"><span class="comment">/* Output:</span></span><br><span class="line"><span class="comment">Window(1)</span></span><br><span class="line"><span class="comment">Window(2)</span></span><br><span class="line"><span class="comment">Window(3)</span></span><br><span class="line"><span class="comment">House()</span></span><br><span class="line"><span class="comment">Window(33)</span></span><br><span class="line"><span class="comment">f()</span></span><br><span class="line"><span class="comment">*/</span><span class="comment">//:~</span></span><br></pre></td></tr></table></figure></p>
+        
+          <p class="article-more-link">
+            <a href="/2016/03/02/Java static 初始化顺序/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/03/02/Java static 初始化顺序/" data-id="cjg0y8s040008l35yyyqnds5b" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Android Handler Looper Message 详细分析" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/01/23/Android Handler Looper Message 详细分析/" class="article-date">
+  <time datetime="2016-01-23T07:13:06.000Z" itemprop="datePublished">2016-01-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/01/23/Android Handler Looper Message 详细分析/">Android Handler Looper Message 详细分析</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Android异步消息机制架构"><a href="#Android异步消息机制架构" class="headerlink" title="Android异步消息机制架构"></a>Android异步消息机制架构</h2><p>Android异步消息处理架构，其实没那么复杂。简单来说就是<code>looper</code>对象拥有<code>message queue</code>，并且负责从<code>message queue</code>中取出消息给<code>handler</code>来处理。同时<code>handler</code>又负责发送<code>message</code>给<code>looper</code>,由<code>looper</code>把<code>message</code>添加到<code>message queue</code>尾部。就一个圈儿。下面给出图解，应该不难吧？</p>
+<p><img src="http://ww4.sinaimg.cn/mw690/87dacc16gw1f09d4z9fsgj20ij0csmxo.jpg" alt=""></p>
+<p>所以很明显<code>handler</code>和<code>looper</code>是来联系在一起的。需要说明的是，多个<code>message</code>可以指向同一个<code>handler</code>，多个<code>handler</code>也可以指向同一个<code>looper</code>。</p>
+<p>还有一点很重要，普通的线程是没有<code>looper</code>的，如果需要<code>looper</code>对象，那么必须要先调用<code>Looper.prepare()</code>方法，而且一个线程只能有一个<code>looper</code>。调用完以后，此线程就成为了所谓的<code>LooperThread</code>,若在当前<code>LooperThread</code>中创建<code>Handler</code>对象，那么此<code>Handler</code>会自动关联到当前线程的<code>looper</code>对象，也就是拥有<code>looper</code>的引用。<br>
+        
+          <p class="article-more-link">
+            <a href="/2016/01/23/Android Handler Looper Message 详细分析/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/01/23/Android Handler Looper Message 详细分析/" data-id="cjg0y8rzv0001l35y3g0ed9if" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Android View总结" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/12/17/Android View总结/" class="article-date">
+  <time datetime="2015-12-17T07:13:06.000Z" itemprop="datePublished">2015-12-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/12/17/Android View总结/">Android View总结</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="关于Android-View控件"><a href="#关于Android-View控件" class="headerlink" title="关于Android View控件"></a>关于Android View控件</h2><p>Android中控件大致被分为两类ViewGroup,View。ViewGroup作为容器管理View。Android视图，是类似于Dom树的架构。父视图负责测量定位绘制等操作。我们经常在用的<code>findViewById</code> 方法代价昂贵的原因，就是因为他负责至上而下遍历整棵控件树，来寻找View实例，在重复操作中尽量少用。现在在用的很多控件都是直接或者间接继承自View的，如下图。</p>
+<p><img src="http://ww2.sinaimg.cn/mw690/87dacc16gw1ez2rbxd8lsj20mw0d9wfy.jpg" alt="view 继承树"><br>
+        
+          <p class="article-more-link">
+            <a href="/2015/12/17/Android View总结/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/12/17/Android View总结/" data-id="cjg0y8s010005l35yhei59pgm" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Android Studio莫名奇妙错误系列" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/10/14/Android Studio莫名奇妙错误系列/" class="article-date">
+  <time datetime="2015-10-14T07:13:06.000Z" itemprop="datePublished">2015-10-14</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/10/14/Android Studio莫名奇妙错误系列/">Android Studio莫名奇妙错误系列</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="错误环境"><a href="#错误环境" class="headerlink" title="错误环境"></a>错误环境</h2><p>Android studio 在Gradle编译的时候经常会遇到一些莫名其妙的问题。像这个</p>
+<blockquote>
+<p>ErrorExecution failed for task ‘appdexDebug’. com.android.ide.common.process.ProcessException org.gradle.process.internal.ExecException Process ‘command ‘D:\Java\jdk1.8.0_45binjava.exe’’ finished with non-zero exit value 1</p>
+</blockquote>
+<p>当我把java module添加到app依赖的以后，运行app会报这个错。</p>
+<h2 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h2><p>下载Java JDK1.7</p>
+<p>打开项目的Project Structure</p>
+<p>左侧选择SDK Location</p>
+<p>右侧改变JDK location 把1.8改成1.7</p>
+<h2 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h2><p>android studio 不支持jdk1.8</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/10/14/Android Studio莫名奇妙错误系列/" data-id="cjg0y8rzz0003l35yrqg0sjfl" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-ActionBar详解" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/09/29/ActionBar详解/" class="article-date">
+  <time datetime="2015-09-29T07:13:06.000Z" itemprop="datePublished">2015-09-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/09/29/ActionBar详解/">ActionBar文档翻译</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="关于ActionBar"><a href="#关于ActionBar" class="headerlink" title="关于ActionBar"></a>关于ActionBar</h2><p>本文主要内容来自Android Doc。</p>
+<p>ActionBar是个窗体功能来鉴别用户当前在app中的位置，提供给用户一些功能和导航。通过ActionBar可以方便的让系统自动的适配不同尺寸的屏幕。</p>
+<p>ActionBar包含如下内容。</p>
+<p><img src="http://ww2.sinaimg.cn/mw690/87dacc16gw1ewj907arxlj20nt0bzjtg.jpg" alt="ActionBar"></p>
+<ol>
+<li>App icon</li>
+<li>Action item(项目)</li>
+<li>Action overflow(放不下的item,放在overflow里)<a id="more"></a>
+        
+          <p class="article-more-link">
+            <a href="/2015/09/29/ActionBar详解/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/09/29/ActionBar详解/" data-id="cjg0y8rzr0000l35yljox7ugu" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-onServiceConnected方法没有回调的解决方案" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/09/25/onServiceConnected方法没有回调的解决方案/" class="article-date">
+  <time datetime="2015-09-25T07:13:06.000Z" itemprop="datePublished">2015-09-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/09/25/onServiceConnected方法没有回调的解决方案/">onServiceConnected方法没有回调的解决方案</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这两天在做一个关于截取电话的service服务。当我想让activity和service进行信息交换的时候，发现onServiceConnected()这个方法一直无法调用。</p>
+<p>google了好久终于解决了。下面把这个解决方案，总结如下。</p>
+<h2 id="注册Service"><a href="#注册Service" class="headerlink" title="注册Service"></a>注册Service</h2><p>首先要确保在AdnroidManifest.xml文件正确注册service<br>注意 建议把名称换成全名，包名也写进去，如下所示。stackoverflow里确实有人就是这样解决了。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">service</span> <span class="attr">android:name</span>=<span class="string">"three.com.phoneservice.PhoneServer"</span> /&gt;</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="返回实例化的Binder"><a href="#返回实例化的Binder" class="headerlink" title="返回实例化的Binder"></a>返回实例化的Binder</h2><p>必须要在onBind()方法中返回一个实例化的Binder。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> MyBinder myBinder=<span class="keyword">new</span> MyBinder();</span><br><span class="line"></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> IBinder <span class="title">onBind</span><span class="params">(Intent intent)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> myBinder;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBinder</span> <span class="keyword">extends</span> <span class="title">Binder</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getDb</span><span class="params">(TextView mytextView,Db mdb,Context mcontext)</span></span>&#123;</span><br><span class="line">        textView=mytextView;</span><br><span class="line">        db=mdb;</span><br><span class="line">        context=mcontext;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="别在主线程中做费时的操作"><a href="#别在主线程中做费时的操作" class="headerlink" title="别在主线程中做费时的操作"></a>别在主线程中做费时的操作</h2><p>这是需要特别注意的一点。我就是遇到了这个坑。因为activity和service是同一个线程！如果你在主线程中阻塞等待，那么service自然会崩溃。</p>
+<p>所以最好像这样写。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> ServiceConnection serviceConnection=<span class="keyword">new</span> ServiceConnection() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onServiceConnected</span><span class="params">(ComponentName name, IBinder service)</span> </span>&#123;</span><br><span class="line">        myBinder= (PhoneServer.MyBinder) service;</span><br><span class="line">        myBinder.getDb(textView, db,MainActivity.<span class="keyword">this</span>);</span><br><span class="line">        <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                Utility.createPersonInfo(db);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onServiceDisconnected</span><span class="params">(ComponentName name)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/09/25/onServiceConnected方法没有回调的解决方案/" data-id="cjg0y8s0j000vl35yo3wbsrey" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-ListView和Adapter详解" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2015/09/22/ListView和Adapter详解/" class="article-date">
+  <time datetime="2015-09-22T07:13:06.000Z" itemprop="datePublished">2015-09-22</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/09/22/ListView和Adapter详解/">ListView和Adapter详解</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="什么是ListView"><a href="#什么是ListView" class="headerlink" title="什么是ListView"></a>什么是ListView</h2><blockquote>
+<p>ListView is a view group that displays a list of scrollable items. The list items are automatically inserted to the list using an Adapter that pulls content from a source such as an array or database query and converts each item result into a view that’s placed into the list.</p>
+</blockquote>
+<p>其实很容易理解，ListView就是一个能数据集合以动态滚动的方式展示到用户界面上的View。<br>
+        
+          <p class="article-more-link">
+            <a href="/2015/09/22/ListView和Adapter详解/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2015/09/22/ListView和Adapter详解/" data-id="cjg0y8s05000al35ypgkip4fd" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+  <nav id="page-nav">
+    
+    <a class="extend prev" rel="prev" href="/page/2/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+  </nav>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Algorithm/">Algorithm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Computer-Network/">Computer Network</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Database-System/">Database System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-Computing/">Distributed Computing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT-6-828/">MIT 6.828</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Operating-system/">Operating system</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/杂/">杂</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Algorithm/" style="font-size: 20px;">Algorithm</a> <a href="/tags/Android/" style="font-size: 16px;">Android</a> <a href="/tags/Computer-Network/" style="font-size: 10px;">Computer Network</a> <a href="/tags/Database-System/" style="font-size: 10px;">Database System</a> <a href="/tags/Distributed-Computing/" style="font-size: 10px;">Distributed Computing</a> <a href="/tags/Distributed-System/" style="font-size: 10px;">Distributed System</a> <a href="/tags/Java/" style="font-size: 12px;">Java</a> <a href="/tags/MIT-6-828/" style="font-size: 14px;">MIT 6.828</a> <a href="/tags/Machine-Learning/" style="font-size: 12px;">Machine Learning</a> <a href="/tags/Operating-system/" style="font-size: 18px;">Operating system</a> <a href="/tags/Tomcat/" style="font-size: 10px;">Tomcat</a> <a href="/tags/杂/" style="font-size: 10px;">杂</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">September 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">July 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">June 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/04/">April 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">March 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/06/11/Raft 共识算法/">Raft 共识算法</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/30/数据库事务与并发控制/">数据库事务与并发控制</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/18/计算机网络自顶向下之可靠传输协议的笔记/">计算机网络自顶向下之可靠传输协议的笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/07/MIT 6.828 lab5/">MIT 6.828 lab5</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/02/MIT 6.828 lab4/">MIT 6.828 lab4</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

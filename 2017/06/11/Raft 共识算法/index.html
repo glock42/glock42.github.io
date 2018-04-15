@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Raft 共识算法 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言前段时间一直在找实习，断更了很久。现阶段拿到bilibili，饿了么，美团点评，有赞，四个offer。网易其实面试也通过了，但hr之后最后和我说hc审批不到，比较无奈。最后选择了去美团点评。事实证明大部分的企业确实更看重能力，HR通过学校来刷简历其实也是无奈之举。可以算是除了阿里之外所有给我面试的机会的公司，全都通过了面试。比较遗憾的是阿里面了我6面，还是被拒，可能还是实力不够吧。不管怎么样，">
+<meta name="keywords" content="Distributed System">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Raft 共识算法">
+<meta property="og:url" content="http://yoursite.com/2017/06/11/Raft 共识算法/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="前言前段时间一直在找实习，断更了很久。现阶段拿到bilibili，饿了么，美团点评，有赞，四个offer。网易其实面试也通过了，但hr之后最后和我说hc审批不到，比较无奈。最后选择了去美团点评。事实证明大部分的企业确实更看重能力，HR通过学校来刷简历其实也是无奈之举。可以算是除了阿里之外所有给我面试的机会的公司，全都通过了面试。比较遗憾的是阿里面了我6面，还是被拒，可能还是实力不够吧。不管怎么样，">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://camo.githubusercontent.com/f9b80d45d67996bb9ce63ba6e5d37b6a03150097/68747470733a2f2f646e2d307830312d696f2e71626f782e6d652f726166742d254535253942254245352e706e67">
+<meta property="og:image" content="https://camo.githubusercontent.com/a82fb45bde23f6b51ccca37f9dde7d5c5c547e90/68747470733a2f2f646e2d307830312d696f2e71626f782e6d652f726166742d254535253942254245372e706e67">
+<meta property="og:image" content="https://camo.githubusercontent.com/14df99e543c71ee75cafd614e1c55c25ac580ec8/68747470733a2f2f646e2d307830312d696f2e71626f782e6d652f726166742d254535253942254245382e706e67">
+<meta property="og:image" content="http://7xrsib.com1.z0.glb.clouddn.com/2017-06-11%2021-36-40%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png">
+<meta property="og:image" content="http://7xrsib.com1.z0.glb.clouddn.com/2017-06-11%2021-38-07%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png">
+<meta property="og:updated_time" content="2018-04-15T14:49:01.368Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Raft 共识算法">
+<meta name="twitter:description" content="前言前段时间一直在找实习，断更了很久。现阶段拿到bilibili，饿了么，美团点评，有赞，四个offer。网易其实面试也通过了，但hr之后最后和我说hc审批不到，比较无奈。最后选择了去美团点评。事实证明大部分的企业确实更看重能力，HR通过学校来刷简历其实也是无奈之举。可以算是除了阿里之外所有给我面试的机会的公司，全都通过了面试。比较遗憾的是阿里面了我6面，还是被拒，可能还是实力不够吧。不管怎么样，">
+<meta name="twitter:image" content="https://camo.githubusercontent.com/f9b80d45d67996bb9ce63ba6e5d37b6a03150097/68747470733a2f2f646e2d307830312d696f2e71626f782e6d652f726166742d254535253942254245352e706e67">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Raft 共识算法" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/06/11/Raft 共识算法/" class="article-date">
+  <time datetime="2017-06-11T14:00:00.000Z" itemprop="datePublished">2017-06-11</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Raft 共识算法
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>前段时间一直在找实习，断更了很久。现阶段拿到<code>bilibili</code>，<code>饿了么</code>，<code>美团点评</code>，<code>有赞</code>，四个<code>offer</code>。网易其实面试也通过了，但<code>hr</code>之后最后和我说<code>hc</code>审批不到，比较无奈。最后选择了去美团点评。事实证明大部分的企业确实更看重能力，<code>HR</code>通过学校来刷简历其实也是无奈之举。可以算是除了阿里之外所有给我面试的机会的公司，全都通过了面试。比较遗憾的是阿里面了我6面，还是被拒，可能还是实力不够吧。不管怎么样，这已经是我比较满意的结果了。</p>
+<p>我的春招结束了，我很怀念它。</p>
+<h2 id="Raft"><a href="#Raft" class="headerlink" title="Raft"></a>Raft</h2><p>关于<code>mit 6.824</code>，这门课在找工作期间，又拾起来继续做了，断断续续的把<code>lab2</code>做完了，pass掉所有test。完整的实现了<code>Raft</code>算法，对分布式的了解也算是更进了一步。此文会对<code>Raft</code>做一个归纳总结，大部分的内容基于<a href="https://pdos.csail.mit.edu/6.824/papers/raft-extended.pdf" target="_blank" rel="noopener">raft 论文</a> 。</p>
+<p><code>Raft</code>是一个共识算法，目的是为了保证多个副本在多个服务器的情况下数据的一致性，以及保证一定的容错能力。</p>
+<p><code>Raft</code>的卖点是<code>understandable</code>，论文中一直在强调可理解（这个可理解对没接触过分布式的人来说，其实也不太好理解…）。这个可理解应该是相对于<code>paxos</code>来说的。基于<code>understandable</code>这个目标，<code>Raft</code>把整个共识的过程分成三块，分别是<code>leader election</code>， <code>log replication</code>和<code>safety</code>，下面我们会一一介绍。<br><a id="more"></a></p>
+<h3 id="复制状态机（Replicated-state-machines）"><a href="#复制状态机（Replicated-state-machines）" class="headerlink" title="复制状态机（Replicated state machines）"></a>复制状态机（Replicated state machines）</h3><p>所谓的复制状态机其实并不是指某个服务器，而是一种用来容错的方法。比如说无论是<code>GFS</code>还是<code>HDFS</code>都需要有一个master服务器来保存<code>metadata</code>，那么就会存在这个<code>master</code>宕机的情况，一旦宕机，你的整个服务就不可用。解决方法就是通过复制多个副本到另外的服务器来备用，一旦<code>master</code>宕机，备用的服务器就可以立刻上线来充当<code>master</code>。但是这里存在一个问题，如何保证<code>master</code>和备用服务器的数据一致性？最直接的办法，就是在<code>master</code>上执行的命令，都在备用服务器都执行一遍。那么如何让备用服务器知道执行什么命令？通过<code>log</code>。当<code>master</code>接到客户端的命令之后，把这个命令写到<code>log</code>中，接着把<code>log</code>发给所有的备用服务器，等到大部分备用服务器接收到<code>log</code>，并反馈给<code>master</code>之后，<code>master</code>才提交这个命令（表示这个命令可以执行了）。但是这当中会有一些问题，比如备用服务器宕机，网络丢包等等。这其实就是<code>Raft</code>需要解决的核心问题，保证<code>master</code>和备用服务器的数据一致，也就是所有<code>log</code>都按顺序执行。那么<code>master</code>和备用服务器合在一起，就像是一个服务器一样，无所谓请求哪个服务器都会得到一致的结果。</p>
+<h3 id="Raft的状态"><a href="#Raft的状态" class="headerlink" title="Raft的状态"></a>Raft的状态</h3><p><code>Raft</code>分为以下三个状态。</p>
+<ul>
+<li>Leader</li>
+<li>Candidate</li>
+<li>Follower</li>
+</ul>
+<p>Raft简单的地方在于，日志是由<code>Leader</code>到<code>Follower</code>的单向传递。也就是说<code>Leader</code>相当于一个总控节点，由它负责接受<code>client</code>的请求，并且把日志发送各个<code>Follower</code>，进行复制。也是只有Leader能决定何时提交一个日志。</p>
+<p>其实整个Raft算法都是围绕着<code>Leader</code>进行的，主要分成以下三块。</p>
+<ul>
+<li><p>Leader election</p>
+<p>一开始每个服务器都是<code>Follower</code>，那么需要决定由谁来做<code>Leader</code>，这里延伸出<code>Leader election</code>的问题。而且当Leader宕机的时候也需要重新进行选举。</p>
+</li>
+<li><p>Log replication</p>
+<p>当<code>Leader</code>选举出来之后，需要把日志复制到每个<code>Follower</code>。这里复制需要保证所有日志都有序且正确的复制到<code>Follower</code>上。也就是说<code>Follower</code>上的日志不管是顺序还是内容都要和Leader上的一样。</p>
+</li>
+<li><p>Safety</p>
+<p>一但Leader把一项日志复制到绝大多数（容错）的<code>Follower</code>时，需要执行这个日志。这里的安全性是指所有的服务器都要在这同一个位置执行同一个Log，简单来说就是<code>所有的服务器都要按一样的顺序执行相同的Log</code>。比方说一个log，<code>index = 3, command = x -&gt; 2</code>，那么所有的服务器在<code>Index=3</code>这个位置必须执行<code>x-&gt;2</code>这个操作，不然就会数据不一致了。<code>Safety</code>可能翻译成<code>正确性</code>更容易理解。</p>
+</li>
+</ul>
+<h3 id="Leader-election"><a href="#Leader-election" class="headerlink" title="Leader election"></a>Leader election</h3><h4 id="任期（Term）"><a href="#任期（Term）" class="headerlink" title="任期（Term）"></a>任期（Term）</h4><p>在讲领导选举之前有一个比较关键的概念，就是<code>任期（Term）</code>。按照论文上的说法，<code>term</code>相当于一个逻辑上的时钟，用来检测过时的信息。请仔细理解上面这句话。<code>Follower</code>在超时之后就会成为<code>Candidate</code>，成为<code>Candidate</code>之后，它自增任期，并且把票投给自己，并且发送<code>RPC</code>请求给各个服务器，在得到绝大多数选票之后，成为<code>Leader</code>。为什么是绝大多数选票？因为一个任期只能有一个领导。假如<code>Candidate</code>没有拿到绝大多数选票，即有其他<code>Candidate</code>在竞争选票，那么<code>Candidate</code>会再次自增<code>Term</code>，发起下一轮投票。</p>
+<p>这里有一个关键的点，就是一个任期只能有一个领导。假如领导宕机，会重新进行选举换领导，那么<code>Term</code>也会改变。所以通过这个方式可以用<code>Term</code>来感知过时的信息。假设有这一种情况，一开始a为领导，然后a断开了网络，集群的服务器因收不到a的心跳包，重新选举出一位领导b，b的任期大于a，当a再次加入网络，当发送心跳给b或者接受到b的心跳包时，通过比较<code>Term</code>可知a已经过期，会把a的<code>Term</code>改成b的<code>Term</code>，且状态变回<code>Follower</code>。</p>
+<p><img src="https://camo.githubusercontent.com/f9b80d45d67996bb9ce63ba6e5d37b6a03150097/68747470733a2f2f646e2d307830312d696f2e71626f782e6d652f726166742d254535253942254245352e706e67" alt=""></p>
+<h4 id="选举"><a href="#选举" class="headerlink" title="选举"></a>选举</h4><p>我们再来捋一下这个选举的过程</p>
+<ol>
+<li>服务器刚启动时，状态都是<code>Follower</code>。假如<code>Follower</code>在定时器设定的时间（随机）内，收到来自<code>Leader</code>或者<code>Candidate</code>合法的<code>RPC</code>请求，会继续保持<code>Follower</code>，并重置定时器的时间。</li>
+<li>在定时器设定的时间内，没有收到合法的<code>RPC</code>请求，那么则发生<code>election timeout</code>，表示此时没有<code>Leader</code>。则超时的<code>Follower</code>，转换成<code>Candidate</code>。</li>
+<li>成为<code>Candidate</code>之后，立即开始投票。先<code>Term</code>自增，然后投票给自己，重置定时器，并且并发的发送<code>RequestVote</code>给所有的服务器。接下来有三种情况会发生。<ul>
+<li>A.收到绝大多数服务器的选票，赢得选举，成为<code>Leader</code></li>
+<li>B.另一个服务器成为<code>Leader</code>，选举失败。（如何得知另一个服务器成为<code>Leader</code>？）</li>
+<li>C.定时器超时，仍然没有<code>Leader</code>产生，说明有另外的<code>Candidate</code>竞争，产生平票之类的情况，则进入下一轮选举（也就是重做3）。</li>
+</ul>
+</li>
+</ol>
+<p>这里产生了Raft的第一个特性</p>
+<ul>
+<li><p>Election Safety</p>
+<p>一个任期内只能有一个<code>Leader</code>。（任期不同即表示<code>Leader</code>已经换过了）</p>
+</li>
+</ul>
+<h5 id="情况A"><a href="#情况A" class="headerlink" title="情况A"></a>情况A</h5><p>服务器按照先来先服务的原则进行投票（这里还有<code>Safety</code>的限制，只有含有全部<code>commit log</code>的<code>Candidate</code>才能获得选票）。所谓绝大多数的选票是指大于<code>n/2</code>。一旦赢得选举之后，则转成<code>Leader</code>，并且发送心跳包给另外的服务器来保证不会<code>election timeout</code>。</p>
+<h5 id="情况B"><a href="#情况B" class="headerlink" title="情况B"></a>情况B</h5><p>假设另一个服务器成为了<code>Leader</code>，那么会发生什么？也就是当前这个<code>Candidate</code>会收到来自另一个<code>Leader</code>合法（<code>Term</code>没有落后）的<code>AppendEntries</code>请求。说明当前<code>Term</code>已经选举出<code>Leader</code>了，当前<code>Candidate</code>可以转为<code>Follower</code>了。</p>
+<h5 id="情况C"><a href="#情况C" class="headerlink" title="情况C"></a>情况C</h5><p>也就是多个<code>Follower</code>都成为了<code>Candidate</code>，各自抢了一部分选票，一个都没赢。这种情况会再次发生election timeout，则直接进行下一轮竞选。</p>
+<p>这里有个关键的问题，就是如何保证最终一定会产生一个<code>Leader</code>？办法是定时器设置的时间随机的<code>（150–300 ms）</code>。</p>
+<h3 id="Log-replication"><a href="#Log-replication" class="headerlink" title="Log replication"></a>Log replication</h3><p>当<code>Leader</code>选出来之后，就到了发送log的环节了。这一部分的本质要解决的问题就是让<code>Follower</code>和<code>Leader</code>的日志顺序和内容都完全相同（指提交的部分），这样才能保证一致性。</p>
+<p>阅读以下内容时请牢记<code>Log replication</code>要解决的本质问题是什么，也就是上面那句话。</p>
+<p><code>Raft</code>维护了两个属性来保证<code>Follower</code>和<code>Leader</code>的日志顺序和内容完全相同（提交的部分）。</p>
+<ul>
+<li>如果两个entry在不同的服务器中，拥有同样的index和term，则保证他们保存了相同的命令</li>
+<li>如果两个entry在不同的服务器中，拥有同样的index和term，则保证在两个entry之前的所有entry都相等。</li>
+</ul>
+<p>第一个属性要保证很简单，leader每次创建entry时，都只会使用新的index，而不会去改写之前index的内容。这也就是在给定index和term的情况下，只会创建一个entry。那么也就保证了相同index和term，相同命令。</p>
+<p>第二个属性需要在每次<code>AppendEntries</code>的时候进行检查。<code>Leader</code>每次发送entry给follower时，会带上前一个entry的index和term。当<code>Follower</code>收到<code>RPC</code>时，会检查最后一个entry的index和term是不是和<code>AppendEntries</code>中的<code>prevIndex</code>和<code>prevTerm</code>相同，不相同则拒绝。若不相同则说明该entry保存的命令和<code>Leader</code>上保存的命令不同，则自然要拒绝。这个也就是所谓的一致性检查<code>（the consistency check）</code>。</p>
+<p>正常情况下（没有机器宕机的情况），follower的日志是和leader同步的，不会有check失败的情况，但是如果考虑宕机的情况，就各种情况都有可能发生，参考下面一张图。</p>
+<p><img src="https://camo.githubusercontent.com/a82fb45bde23f6b51ccca37f9dde7d5c5c547e90/68747470733a2f2f646e2d307830312d696f2e71626f782e6d652f726166742d254535253942254245372e706e67" alt=""></p>
+<p><code>Follower</code>可能会缺少log，也可能会有多余的log，甚至都发生。</p>
+<p>要解决这种情况，<code>Follower</code>需要从最后一次确认的entry之后，删除多余的entry，并且继续追加缺失的entry。</p>
+<p><code>Raft</code>简单的地方在于，<code>Leader</code>从来不会修改自己log，而是让<code>Follower</code>自己去修改log。</p>
+<p>方法就是<code>Leader</code>维护一个<code>nextIndex[i]</code>数组，用来保存下个发给<code>Follower[i]</code>的Index，如果<code>consistency check</code>通过，则<code>nextIndex[i]++</code>，不然的话则<code>nextIndex[i]--</code>，直到双方同步log位置。这个感觉有点类似于<code>tcp</code>传数据时的<code>ack</code>，总是返回下一个期望收到的数据包。</p>
+<p>也就是说这里除了<code>nextIndex</code>的更新之外，<code>Leader</code>不需要做什么额外的动作。这就是<code>Raft</code>可理解的地方了。</p>
+<h3 id="Safety"><a href="#Safety" class="headerlink" title="Safety"></a>Safety</h3><h4 id="选举限制"><a href="#选举限制" class="headerlink" title="选举限制"></a>选举限制</h4><p>那么是不是这样就能保证，<code>Follower</code>和<code>Leader</code>都按顺序执行相同的命令呢？不一定！考虑上面那张图的情况。假设这个时候<code>Leader</code>宕机，<code>Follower(f)</code>被选举成为<code>Leader</code>，那么会发生什么？<code>nextIndex</code>会一直<code>uncheck</code>直到<code>index=4</code>的<code>entry</code>，把2发给每个<code>Follower</code>，但是之前4已经复制到了大部分机器上，已经<code>commit</code>了，这时候会发生覆盖已经<code>commit</code>的<code>entry</code>的情况了！</p>
+<p>所以在选举的时候会加上限制，在<code>RequestVote</code>中加上<code>Candidate</code>的最后一个entry的index以及term。<code>Follower</code>会与自己的最后一个<code>entry</code>的<code>index</code>和<code>term</code>进行比较。假设<code>term</code>不相等，那么只有拥有最新<code>term</code>的<code>Candidate</code>才能获得选票。若假设<code>term</code>相等，则比较<code>index</code>，最长的那个获得选票。</p>
+<p>也就是说只有一个<code>Candidate</code>包含了全部已经<code>commit</code>的<code>entry</code>的情况下，才能获得选票。这就是所谓的<code>at least up-to-date</code>，其实也就是保证<code>term</code>最新，若<code>term</code>相同，则保证<code>log</code>最长。这样选出来的<code>leader</code>肯定包含所有<code>commit</code>的<code>entry</code>。（其实这个命题，同样要加上一点约束才是正确的，也就是下面的<code>commit</code>限制）</p>
+<h4 id="commit限制"><a href="#commit限制" class="headerlink" title="commit限制"></a>commit限制</h4><p>我们先来看下面的图。</p>
+<p><img src="https://camo.githubusercontent.com/14df99e543c71ee75cafd614e1c55c25ac580ec8/68747470733a2f2f646e2d307830312d696f2e71626f782e6d652f726166742d254535253942254245382e706e67" alt="图 8"></p>
+<p>黑框表示为<code>Leader</code>。注意c的时候，2已经拷贝到大部分服务器上，提交以后，s1宕机，然后此时s5仍然能获得s2，s3，s4的选票成为<code>Leader</code>，但是这种情况s5不知道2已经被提交了，那么2就会被3覆盖！</p>
+<p>这里限制的条件就是，在c的时候2无法提交！<code>Leader</code>仅仅只能提交当前<code>Term</code>的<code>entry</code>!这样的话如果没提交，即使被覆盖也没什么。如果到e这种情况，s5已经无法获得选票了。</p>
+<p>通过上述两个限制保证<code>Leader</code>选举成功时一定会包含全部已经<code>commit</code>的<code>entry</code>。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>此文大致描述了<code>Raft</code>算法的基本样貌。我觉得理解Raft最重要的还是理解下面五个性质。</p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2017-06-11%2021-36-40%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p>最后再上一张pass所有test的截图！</p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2017-06-11%2021-38-07%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://raft.github.io/raft.pdf" target="_blank" rel="noopener">In Search of an Understandable Consensus Algorithm</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/06/11/Raft 共识算法/" data-id="cjg0y8s0g000pl35yreah0ro6" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/12/30/数据库事务与并发控制/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">数据库事务与并发控制</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Algorithm/">Algorithm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Computer-Network/">Computer Network</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Database-System/">Database System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-Computing/">Distributed Computing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT-6-828/">MIT 6.828</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Operating-system/">Operating system</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/杂/">杂</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Algorithm/" style="font-size: 20px;">Algorithm</a> <a href="/tags/Android/" style="font-size: 16px;">Android</a> <a href="/tags/Computer-Network/" style="font-size: 10px;">Computer Network</a> <a href="/tags/Database-System/" style="font-size: 10px;">Database System</a> <a href="/tags/Distributed-Computing/" style="font-size: 10px;">Distributed Computing</a> <a href="/tags/Distributed-System/" style="font-size: 10px;">Distributed System</a> <a href="/tags/Java/" style="font-size: 12px;">Java</a> <a href="/tags/MIT-6-828/" style="font-size: 14px;">MIT 6.828</a> <a href="/tags/Machine-Learning/" style="font-size: 12px;">Machine Learning</a> <a href="/tags/Operating-system/" style="font-size: 18px;">Operating system</a> <a href="/tags/Tomcat/" style="font-size: 10px;">Tomcat</a> <a href="/tags/杂/" style="font-size: 10px;">杂</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">September 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">July 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">June 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/04/">April 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">March 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/06/11/Raft 共识算法/">Raft 共识算法</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/30/数据库事务与并发控制/">数据库事务与并发控制</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/18/计算机网络自顶向下之可靠传输协议的笔记/">计算机网络自顶向下之可靠传输协议的笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/07/MIT 6.828 lab5/">MIT 6.828 lab5</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/02/MIT 6.828 lab4/">MIT 6.828 lab4</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

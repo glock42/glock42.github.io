@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>进程与线程 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="进程 进程是一个程序的实例  上面是最基本进程定义。就好比说当你双击txt文件，就开启了一个进程运行文本编辑器。当你再双击一下，就又开启了一个进程。这两个进程互不干扰，一个进程关闭或者崩溃，并不会导致另一个进程关闭。但是这两个进程拥有一个通信的接口，就是那个txt文件。这两个文本编辑器使用的同一个文件，这就又引申出另一个问题，进程间通信(IPC). 在举个例子程序是一系列指令的集合，就好比一个类，">
+<meta name="keywords" content="Operating system">
+<meta property="og:type" content="article">
+<meta property="og:title" content="进程与线程">
+<meta property="og:url" content="http://yoursite.com/2016/07/28/进程与线程/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="进程 进程是一个程序的实例  上面是最基本进程定义。就好比说当你双击txt文件，就开启了一个进程运行文本编辑器。当你再双击一下，就又开启了一个进程。这两个进程互不干扰，一个进程关闭或者崩溃，并不会导致另一个进程关闭。但是这两个进程拥有一个通信的接口，就是那个txt文件。这两个文本编辑器使用的同一个文件，这就又引申出另一个问题，进程间通信(IPC). 在举个例子程序是一系列指令的集合，就好比一个类，">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-04-15T14:49:01.373Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="进程与线程">
+<meta name="twitter:description" content="进程 进程是一个程序的实例  上面是最基本进程定义。就好比说当你双击txt文件，就开启了一个进程运行文本编辑器。当你再双击一下，就又开启了一个进程。这两个进程互不干扰，一个进程关闭或者崩溃，并不会导致另一个进程关闭。但是这两个进程拥有一个通信的接口，就是那个txt文件。这两个文本编辑器使用的同一个文件，这就又引申出另一个问题，进程间通信(IPC). 在举个例子程序是一系列指令的集合，就好比一个类，">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-进程与线程" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/07/28/进程与线程/" class="article-date">
+  <time datetime="2016-07-28T07:58:06.000Z" itemprop="datePublished">2016-07-28</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      进程与线程
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h2><blockquote>
+<p>进程是一个程序的实例</p>
+</blockquote>
+<p>上面是最基本进程定义。就好比说当你双击<code>txt</code>文件，就开启了一个进程运行文本编辑器。当你再双击一下，就又开启了一个进程。这两个进程互不干扰，一个进程关闭或者崩溃，并不会导致另一个进程关闭。但是这两个进程拥有一个通信的接口，就是那个<code>txt</code>文件。这两个文本编辑器使用的同一个文件，这就又引申出另一个问题，进程间通信<code>(IPC)</code>.</p>
+<p>在举个例子程序是一系列指令的集合，就好比一个类，进程则是真正在执行这些指令的东西，就好比对象。</p>
+<h3 id="进程的特点"><a href="#进程的特点" class="headerlink" title="进程的特点"></a>进程的特点</h3><p>进程拥有一个独立的执行环境。进程之间互不干扰。它拥有自己栈，堆，<code>code</code>，静态文本，完全自给自足。所以说一个进程拥有独立的地址空间以及一个或者多个线程。<br><a id="more"></a></p>
+<h3 id="进程的创建"><a href="#进程的创建" class="headerlink" title="进程的创建"></a>进程的创建</h3><p>在<code>unix</code>系统中，进程创建执行主要靠两个函数<code>fork</code>和<code>exec</code>。</p>
+<p>先来看<code>fork</code>，这个函数用来创建进程，执行一次返回两次。返回0的则是子进程。下面是创建过程。</p>
+<ol>
+<li>创建一个进程管理块<code>(PCB)</code>，这个东西保存了进程的状态，以及<code>PC</code>，寄存器等等</li>
+<li>创建一个新的地址空间</li>
+<li>把父进程的所有内容都拷贝的新的地址空间中，包括<code>code</code>，<code>stack</code>，<code>heap</code>，<code>static data</code>。</li>
+<li>从父进程那里继承一些执行环境，比如打开的文件之类的</li>
+<li>通知调度器，这个新的进程已经准备好了</li>
+</ol>
+<p><code>fock</code>函数就是克隆了一份当前的进程。然后<code>exec</code>，执行一个新的程序。</p>
+<ol>
+<li>填充程序信息到刚才创建地址空间</li>
+<li>复制参数到内存</li>
+<li>执行程序，状态变为<code>start</code></li>
+</ol>
+<p>现在才是创建了一个真正新的进程。<code>Linux</code>采用<code>copy-on-write</code>技术，也就是说当<code>fork</code>时，并不直接复制整个地址空间给子进程，而是先共享一个拷贝，直到需要写入时，才拷贝。避免了大量的不必要拷贝。</p>
+<h2 id="线程"><a href="#线程" class="headerlink" title="线程"></a>线程</h2><blockquote>
+<p>A thread of execution is the smallest sequence of programmed instructions that can be managed independently by a scheduler, which is typically a part of the operating system. A thread is a component of a process. Multiple threads can exist within one process, executing concurrently and sharing resources such as memory, while different processes do not share these resources</p>
+</blockquote>
+<p>上面这段来自维基百科的定义，清楚简介的定义了线程。翻译下就是说，线程就是一段代码的执行单元，可以直接被调度器调度。并且是进程的一部分，一个进程可拥有多个线程。<br>多个线程可以并行执行，共享堆，静态文本。但是每个线程拥有自己的栈。</p>
+<p>线程比进程更加轻量级，也称之为轻量级的进程。</p>
+<h3 id="为什么需要线程"><a href="#为什么需要线程" class="headerlink" title="为什么需要线程"></a>为什么需要线程</h3><ul>
+<li>创建线程比创建进程的代价要低，且更迅速</li>
+<li>清楚简洁的表示并行任务。大多数程序都拥有需要并发执行的任务，你可以简单的为每个任务创建一个线程，语义明确且好维护。</li>
+<li>并行让任务立即响应。大幅度改善用户体验。保持用户界面流畅</li>
+<li>提升多核处理器的效率。多个任务并行处理，能大大减少计算时间</li>
+<li>使<code>I/O</code>更加高效。一些线程等待<code>I/O</code>数据，另外的去计算</li>
+</ul>
+<h2 id="进程vs线程"><a href="#进程vs线程" class="headerlink" title="进程vs线程"></a>进程vs线程</h2><ul>
+<li>进程之间是互相独立的，而线程共享<code>heap</code>以及<code>static code</code></li>
+<li>进程创建需要创建新的地址空间，而线程并不要求。所以创建线程比进程更便宜。</li>
+<li>一个进程可以拥有多个线程</li>
+<li>对于内容切换，线程比进程快很多</li>
+</ul>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>维基百科<br>《Operating Systems Principles and Practice》</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/07/28/进程与线程/" data-id="cjg0y8s10001pl35yim9z95kx" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Operating-system/">Operating system</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2016/09/27/MIT 6.824 lab1/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          MIT 6.824 lab1
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/07/27/为什么机器可以学习？/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">为什么机器学习真的可以学到东西？</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Algorithm/">Algorithm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Computer-Network/">Computer Network</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Database-System/">Database System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-Computing/">Distributed Computing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT-6-828/">MIT 6.828</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Operating-system/">Operating system</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/杂/">杂</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Algorithm/" style="font-size: 20px;">Algorithm</a> <a href="/tags/Android/" style="font-size: 16px;">Android</a> <a href="/tags/Computer-Network/" style="font-size: 10px;">Computer Network</a> <a href="/tags/Database-System/" style="font-size: 10px;">Database System</a> <a href="/tags/Distributed-Computing/" style="font-size: 10px;">Distributed Computing</a> <a href="/tags/Distributed-System/" style="font-size: 10px;">Distributed System</a> <a href="/tags/Java/" style="font-size: 12px;">Java</a> <a href="/tags/MIT-6-828/" style="font-size: 14px;">MIT 6.828</a> <a href="/tags/Machine-Learning/" style="font-size: 12px;">Machine Learning</a> <a href="/tags/Operating-system/" style="font-size: 18px;">Operating system</a> <a href="/tags/Tomcat/" style="font-size: 10px;">Tomcat</a> <a href="/tags/杂/" style="font-size: 10px;">杂</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">September 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">July 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">June 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/04/">April 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">March 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/06/11/Raft 共识算法/">Raft 共识算法</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/30/数据库事务与并发控制/">数据库事务与并发控制</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/18/计算机网络自顶向下之可靠传输协议的笔记/">计算机网络自顶向下之可靠传输协议的笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/07/MIT 6.828 lab5/">MIT 6.828 lab5</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/02/MIT 6.828 lab4/">MIT 6.828 lab4</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

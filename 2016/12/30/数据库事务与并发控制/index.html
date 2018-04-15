@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>数据库事务与并发控制 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="事务 数据库事务是DBMS执行过程中的一个逻辑单位，由一个有限的数据库操作序列构成。  事务必须要满足ACID四个特性。  Atomicity(原子性) 也就是所谓的all-or-nothing。单个事务有一系列的操作，比如查找，增加，更新等。当事务提交之后事务中所有对数据库的操作必须反映到数据库上。但如果由于某些原因中断，那么所有对数据的操作必须恢复到这个事务开始之前。也就是事务对数据库的操作，">
+<meta name="keywords" content="Database System">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据库事务与并发控制">
+<meta property="og:url" content="http://yoursite.com/2016/12/30/数据库事务与并发控制/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="事务 数据库事务是DBMS执行过程中的一个逻辑单位，由一个有限的数据库操作序列构成。  事务必须要满足ACID四个特性。  Atomicity(原子性) 也就是所谓的all-or-nothing。单个事务有一系列的操作，比如查找，增加，更新等。当事务提交之后事务中所有对数据库的操作必须反映到数据库上。但如果由于某些原因中断，那么所有对数据的操作必须恢复到这个事务开始之前。也就是事务对数据库的操作，">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-28%2023-29-27%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png">
+<meta property="og:image" content="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-29%2021-04-17%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png">
+<meta property="og:image" content="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-30%2015-26-46%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png">
+<meta property="og:updated_time" content="2018-04-15T14:49:01.370Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="数据库事务与并发控制">
+<meta name="twitter:description" content="事务 数据库事务是DBMS执行过程中的一个逻辑单位，由一个有限的数据库操作序列构成。  事务必须要满足ACID四个特性。  Atomicity(原子性) 也就是所谓的all-or-nothing。单个事务有一系列的操作，比如查找，增加，更新等。当事务提交之后事务中所有对数据库的操作必须反映到数据库上。但如果由于某些原因中断，那么所有对数据的操作必须恢复到这个事务开始之前。也就是事务对数据库的操作，">
+<meta name="twitter:image" content="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-28%2023-29-27%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-数据库事务与并发控制" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/12/30/数据库事务与并发控制/" class="article-date">
+  <time datetime="2016-12-30T08:20:06.000Z" itemprop="datePublished">2016-12-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      数据库事务与并发控制
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h2><blockquote>
+<p>数据库事务是<code>DBMS</code>执行过程中的一个逻辑单位，由一个有限的数据库操作序列构成。</p>
+</blockquote>
+<p>事务必须要满足<code>ACID</code>四个特性。</p>
+<ul>
+<li><p><code>Atomicity</code>(原子性)</p>
+<p>也就是所谓的<code>all-or-nothing</code>。单个事务有一系列的操作，比如查找，增加，更新等。当事务提交之后事务中所有对数据库的操作必须反映到数据库上。但如果由于某些原因中断，那么所有对数据的操作必须恢复到这个事务开始之前。也就是事务对数据库的操作，要么全部执行，要么都不执行。</p>
+</li>
+<li><p><code>Consistency</code>(一致性)</p>
+<p>事务开始之前数据满足的完整性约束，在事务结束之后也需要满足。其实也就是事务得到了正确的执行。</p>
+</li>
+<li><p><code>Isolation</code>(隔离性)</p>
+<p>每个事务之间是相互独立的。有点类似于进程的概念。因为事务是并发执行的，所以事务之间不能相互影响不然就有可能破坏<code>一致性</code>。</p>
+</li>
+<li><p><code>Durability</code>(持久性)</p>
+<p>已被提交的事务对数据库的修改应该永久保存在数据库中。这里的关键应该在于永久二字，也就是说即使系统崩溃、硬盘损坏等不可控因素发生，也要保证数据仍然存在数据库中。所以备份很重要啊。</p>
+<a id="more"></a>
+</li>
+</ul>
+<h2 id="并发控制"><a href="#并发控制" class="headerlink" title="并发控制"></a>并发控制</h2><p>考虑一下当多个事务并发执行的情况，是否能保证<code>ACID</code>。如果完全不加控制，因为系统的线程调度是无法预知的，那么多个事务之间的执行顺序也不可控，即破坏了<code>隔离性</code>，随之而来的<code>一致性</code>也无法满足，比如事务可能写入脏数据破坏完整性约束。<code>原子性</code>和<code>持久性</code>需要靠<code>恢复系统</code>来保证，这篇文章不过多讨论<code>恢复系统</code>。</p>
+<p>最简单的能想到的保持<code>隔离性</code>的方式即一次只运行一个事务，也就是说没有并发，<code>串行</code>调度，一个接一个。完全不需要并发控制，可是很明显不现实，因为效率极低。当事务并发执行时，任何调度顺序都是可能的。<code>并发控制</code>的任务是让并发的事务执行结果与串行调度的执行结果相同。这种调度称为<code>可串行化</code>。</p>
+<p>并发控制的目标即<code>可串行化</code>。</p>
+<h3 id="可串行化"><a href="#可串行化" class="headerlink" title="可串行化"></a>可串行化</h3><p>如何检测调度是否为<code>可串行化</code>？有很多方法，这里只说一种<code>冲突可串行化(conflict serializability)</code>。</p>
+<p>先定义<code>冲突</code>，即假设不同事务的两种操作访问同一个对象，如果交换他们的操作顺序，会得到不同的结果，则<code>冲突</code>。</p>
+<p>考虑事务最本质的两种操作，<code>read</code>和<code>write</code>，则总共有四种情况。</p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-28%2023-29-27%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p>很明显，只要涉及到<code>write</code>则<code>冲突</code>。那么当交换调度中<code>未冲突操作</code>的顺序，能得到<code>串行</code>的调度，那么原先的调度则称为<code>冲突可串行化</code>。</p>
+<p>好的，那么如何检测<code>冲突可串行化</code>，当然选择去交换<code>未冲突的操作</code>然后判断是否串行，但效率不高。比较高效的做法是通过<code>优先图</code>检测。维护一个<code>图</code>，当符合特定规则时，放入<code>边</code>。假设有两个事务<code>Ti/Tj</code>，一个对象A，规则如下。</p>
+<ol>
+<li>Ti在Tj之前读或者写A</li>
+<li>Ti在Tj读A之前写A</li>
+</ol>
+<p>有些拗口。若无环，则是<code>冲突可串行化</code>，有环则不是，实例如下。</p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-29%2021-04-17%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<h3 id="可恢复与无级联"><a href="#可恢复与无级联" class="headerlink" title="可恢复与无级联"></a>可恢复与无级联</h3><p>考虑下面一种情况</p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-30%2015-26-46%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p>上面这个调度的问题在于，事务2在读取了事务1的数据之后提交了，然而事务2因为某些原因终止了，那么事务2就要进行回滚。但是事务1已经提交了，提交意味着，数据已经被写入磁盘，原有的数据被覆盖，回滚会出错。这种调度则称为<code>不可恢复的调度</code>。若要实现<code>可恢复的调度</code>，则必须让事务2等待事务1提交之后，再进行提交。</p>
+<p>所以<code>可恢复调度</code>即是指，若某事务A读取事务B写入的内容，则需在事务B提交之后，再提交。</p>
+<p><code>可恢复调度</code>同时会带来一定的问题，即<code>级联</code>问题。若T2读了T1写的数据，T3读了T2写的数据，T4读了T3写的数据，以此类推，假设这时T1终止，则需要回滚一系列事务。这样效率是很低的。所以我们希望的是<code>无级联调度</code>，能避免这种情况。</p>
+<p><code>无级联调度</code>即是指，若事务A读取事务B写入的内容，那么事务B需要在事务A读操作之前提交。注意这里的区别，把事务提交提前了。</p>
+<p>并发控制希望做到<code>可串行化</code>，<code>可恢复</code>和<code>无级联</code>。<code>无级联调度</code>必定是<code>可恢复调度</code>。</p>
+<h3 id="两阶段封锁-Two-phase-locking"><a href="#两阶段封锁-Two-phase-locking" class="headerlink" title="两阶段封锁(Two phase locking)"></a>两阶段封锁(Two phase locking)</h3><p><code>Two phase locking</code>是一种可以实现<code>可串行化</code>的协议。此协议把事务分成两个阶段，<code>增长阶段</code>以及<code>缩减阶段</code>。<code>增长阶段</code>是获得锁的阶段，而<code>缩减阶段</code>则反之，是释放锁的阶段。也就说当一个事务一旦释放了一个锁之后就不能继续加锁了。具体定义如下。</p>
+<ul>
+<li><code>增长阶段(growing phase)</code>: 事务可以获得锁，但不能释放锁</li>
+<li><code>缩减阶段(shrinking phase)</code>: 事务可以释放锁，但不能获得锁</li>
+</ul>
+<p><code>两阶段封锁</code>最主要的作用是推迟了锁的释放时间。可以试想下如果在中间就释放锁，那则有可能调度给其他事务读到脏数据。</p>
+<p><code>两阶段封锁</code>可以保证<code>可串行化</code>，这是可以证明的。但是<code>两阶段封锁</code>不保证<code>死锁</code>，所以需要额外的工作来检测或者预防<code>死锁</code>。</p>
+<p><code>两阶段封锁</code>无法保证<code>无级联</code>，我们可以通过<code>严格两阶段封锁</code>来保证，即在<code>两阶段封锁</code>的前提下，约束在事务提交之前不得释放<code>排他锁</code>。也就是说如果事务不提交的话，他写的数据，别的事务就没法读，符合<code>无级联</code>的定义。</p>
+<p>另个一个变种是<code>强两阶段封锁</code>在严格的基础上更进一步，约束事务在提交之前不得释放任何锁。</p>
+<p>还有个问题，假如某个数据在之前很长一段时间都是只读的，到最后才需要写，如果按照目前的规则，事务在一开始就要获得对数据的<code>排他锁</code>，但是之前数据是只读的，这样影响了一定的效率。我们采取了<code>锁升级</code>的策略。可以先获得<code>共享锁</code>，直到需要写入时再获取排他锁，大大提高并发效率。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="http://db.csail.mit.edu/6.830/lectures/lec12-notes.pdf" target="_blank" rel="noopener">mit 6.830 lec12</a><br>《数据库系统概念》</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/12/30/数据库事务与并发控制/" data-id="cjg0y8s0q0018l35y1u7aa5hc" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Database-System/">Database System</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/06/11/Raft 共识算法/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Raft 共识算法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/12/18/计算机网络自顶向下之可靠传输协议的笔记/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">计算机网络自顶向下之可靠传输协议的笔记</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Algorithm/">Algorithm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Computer-Network/">Computer Network</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Database-System/">Database System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-Computing/">Distributed Computing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT-6-828/">MIT 6.828</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Operating-system/">Operating system</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/杂/">杂</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Algorithm/" style="font-size: 20px;">Algorithm</a> <a href="/tags/Android/" style="font-size: 16px;">Android</a> <a href="/tags/Computer-Network/" style="font-size: 10px;">Computer Network</a> <a href="/tags/Database-System/" style="font-size: 10px;">Database System</a> <a href="/tags/Distributed-Computing/" style="font-size: 10px;">Distributed Computing</a> <a href="/tags/Distributed-System/" style="font-size: 10px;">Distributed System</a> <a href="/tags/Java/" style="font-size: 12px;">Java</a> <a href="/tags/MIT-6-828/" style="font-size: 14px;">MIT 6.828</a> <a href="/tags/Machine-Learning/" style="font-size: 12px;">Machine Learning</a> <a href="/tags/Operating-system/" style="font-size: 18px;">Operating system</a> <a href="/tags/Tomcat/" style="font-size: 10px;">Tomcat</a> <a href="/tags/杂/" style="font-size: 10px;">杂</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">September 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">July 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">June 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/04/">April 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">March 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/06/11/Raft 共识算法/">Raft 共识算法</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/30/数据库事务与并发控制/">数据库事务与并发控制</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/18/计算机网络自顶向下之可靠传输协议的笔记/">计算机网络自顶向下之可靠传输协议的笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/07/MIT 6.828 lab5/">MIT 6.828 lab5</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/02/MIT 6.828 lab4/">MIT 6.828 lab4</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

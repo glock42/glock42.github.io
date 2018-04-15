@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>MIT 6.828 lab1 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言开启一场漫长且有趣的旅程，即日起开始学习MIT 6.828。总共有七个lab。lab6和lab7其中选一个做。 PC启动流程简述先了解一下当PC加电后，整个物理地址空间分布。  早期的16位计算机是只有1MB的寻址能力。也就是说只能使用0x0000 - 0xffff这么多，如上图所示，640kb以下的部分为早期计算机使用的部分。而上面640kb - 1mb的这些地方则保留下来作为特殊使用，比如">
+<meta name="keywords" content="Operating system,MIT 6.828">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MIT 6.828 lab1">
+<meta property="og:url" content="http://yoursite.com/2016/11/06/MIT 6.828 lab1/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="前言开启一场漫长且有趣的旅程，即日起开始学习MIT 6.828。总共有七个lab。lab6和lab7其中选一个做。 PC启动流程简述先了解一下当PC加电后，整个物理地址空间分布。  早期的16位计算机是只有1MB的寻址能力。也就是说只能使用0x0000 - 0xffff这么多，如上图所示，640kb以下的部分为早期计算机使用的部分。而上面640kb - 1mb的这些地方则保留下来作为特殊使用，比如">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-03%2020-55-37%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png">
+<meta property="og:image" content="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-04%2013-38-22%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png">
+<meta property="og:image" content="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-04%2014-10-16%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png">
+<meta property="og:updated_time" content="2018-04-15T14:49:01.367Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MIT 6.828 lab1">
+<meta name="twitter:description" content="前言开启一场漫长且有趣的旅程，即日起开始学习MIT 6.828。总共有七个lab。lab6和lab7其中选一个做。 PC启动流程简述先了解一下当PC加电后，整个物理地址空间分布。  早期的16位计算机是只有1MB的寻址能力。也就是说只能使用0x0000 - 0xffff这么多，如上图所示，640kb以下的部分为早期计算机使用的部分。而上面640kb - 1mb的这些地方则保留下来作为特殊使用，比如">
+<meta name="twitter:image" content="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-03%2020-55-37%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-MIT 6.828 lab1" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/11/06/MIT 6.828 lab1/" class="article-date">
+  <time datetime="2016-11-06T07:50:06.000Z" itemprop="datePublished">2016-11-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      MIT 6.828 lab1
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>开启一场漫长且有趣的旅程，即日起开始学习<code>MIT 6.828</code>。总共有七个<code>lab</code>。<code>lab6</code>和<code>lab7</code>其中选一个做。</p>
+<h2 id="PC启动流程简述"><a href="#PC启动流程简述" class="headerlink" title="PC启动流程简述"></a>PC启动流程简述</h2><p>先了解一下当<code>PC</code>加电后，整个物理地址空间分布。</p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-03%2020-55-37%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p>早期的<code>16位</code>计算机是只有<code>1MB</code>的寻址能力。也就是说只能使用<code>0x0000 - 0xffff</code>这么多，如上图所示，<code>640kb</code>以下的部分为早期计算机使用的部分。而上面<code>640kb - 1mb</code>的这些地方则保留下来作为特殊使用，比如视频显示之类的。其中最重要的部分为<code>BIOS( Basic Input/Output System)</code>，<code>BIOS</code>的主要责任为进行一些自检，然后从启动设备中，并载入它的第一扇区到内存的特定位置，即<code>0x7c00</code>，然后跳转到这个位置继续执行。此时，<code>BIOS</code>的工作完成。<code>0x7c00</code> 即是<code>bootloader</code>的入口点。</p>
+<p>当现代计算机突破了<code>1MB</code>内存，达到<code>4GB</code>甚至更多的时候，依然保留了最开始的<code>1M</code>内存空间。所以开始一开始加电以后，是处于实模式的，也就是只有<code>1MB</code>内存可以访问。<code>bootloader</code>会把实模式切换到保护模式。也就是<code>4GB</code>寻址模式。然后再读取<code>kernel</code>到内存中，并且把控制权转给<code>kernel</code>。至此操作系统才算真正的启动起来。</p>
+<p>下面简单总结下启动流程。</p>
+<ol>
+<li><code>PC</code>启动，并且执行第一条指令，位于<code>0xffff0</code>。是一条跳转指令，跳到<code>BIOS</code>刚开始的地方</li>
+<li><code>BIOS</code> 进行初始化。</li>
+<li><code>BIOS</code>搜寻启动设备，并加载<code>bootloader</code>到内存中，转移控制给<code>bootloader</code></li>
+<li><code>bootloader</code>从实模式切换到保护模式</li>
+<li><code>bootloader</code>从硬盘中读取<code>kernel</code>到内存中，并转移控制给<code>kernel</code></li>
+<li>操作系统启动<a id="more"></a>
+</li>
+</ol>
+<h2 id="关于实模式和保护模式"><a href="#关于实模式和保护模式" class="headerlink" title="关于实模式和保护模式"></a>关于实模式和保护模式</h2><p>实模式即是当<code>PC</code>加电时，处于的模式，仅仅只有<code>16位</code>寻址能力。实模式将内存看成分段的区域。程序段和数据位于不同的区域。但是不区分<code>kernel</code>的操作还是用户的操作，也就是说每一个指针都指向实际的物理地址。很明显，这是致命的。可以通过修改<code>A20</code>地址线可以完成从实模式到保护模式的转换，具体如何转换我也不是很清楚，有兴趣的朋友自己研究。</p>
+<p>在实模式下，地址如下翻译 <code>physical address = 16 * segment + offset</code>。目前你只需要知道在保护模式下，地址翻译与实模式下不同即可。</p>
+<h2 id="Exercise"><a href="#Exercise" class="headerlink" title="Exercise"></a>Exercise</h2><h3 id="Exercise-3"><a href="#Exercise-3" class="headerlink" title="Exercise 3"></a>Exercise 3</h3><blockquote>
+<p>At what point does the processor start executing 32-bit code? What exactly causes the switch from 16- to 32-bit mode?</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># Switch from real to protected mode, using a bootstrap GDT</span><br><span class="line"># and segment translation that makes virtual addresses</span><br><span class="line"># identical to their physical addresses, so that the</span><br><span class="line"># effective memory map does not change during the switch.</span><br><span class="line">lgdt    gdtdesc</span><br><span class="line">movl    %cr0, %eax</span><br><span class="line">orl     $CR0_PE_ON, %eax</span><br><span class="line">movl    %eax, %cr0</span><br><span class="line"></span><br><span class="line"># Jump to next instruction, but in 32-bit code segment.</span><br><span class="line"># Switches processor into 32-bit mode.</span><br><span class="line">ljmp    $PROT_MODE_CSEG, $protcseg</span><br></pre></td></tr></table></figure>
+<p>不多解释，注释很清楚。</p>
+<blockquote>
+<p>What is the <em>last</em> instruction of the boot loader executed, and what is the <em>first</em> instruction of the kernel it just loaded?</p>
+</blockquote>
+<p><code>((void (*)(void)) (ELFHDR-&gt;e_entry))();</code> 根据<code>main.c</code> 的代码，这是最后一条代码。然后我们去看反汇编文件<code>boot.asm</code>。搜索上面那条代码，很清楚的可以看到最后一条指令如下。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// call the entry point from the ELF header</span><br><span class="line">// note: does not return!</span><br><span class="line">((void (*)(void)) (ELFHDR-&gt;e_entry))();</span><br><span class="line">7d6b:   ff 15 18 00 01 00       call   *0x10018</span><br></pre></td></tr></table></figure>
+<p>第一条<code>kernel</code>执行的语句如下。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">movw    $0x1234,0x472           # warm boot</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Where is the first instruction of the kernel?</p>
+</blockquote>
+<p>让我困惑的是，当我实际<code>debug</code>的时候发现，并没有跳到<code>0x10018</code>去执行<code>kernel</code>，反而跳到了<code>0x10000c</code>。估计大概是由于内存映射之类的原因。故猜想<code>0x10018</code>可是是<code>c语言</code>的虚拟地址。</p>
+<blockquote>
+<p>How does the boot loader decide how many sectors it must read in order to fetch the entire kernel from disk? Where does it find this information?</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ph = (struct Proghdr *) ((<span class="keyword">uint8_t</span> *) ELFHDR + ELFHDR-&gt;e_phoff); <span class="comment">//e_phoff是header表的位置偏移</span></span><br><span class="line">eph = ph + ELFHDR-&gt;e_phnum;   <span class="comment">//e_phnum是header的数目</span></span><br><span class="line"><span class="keyword">for</span> (; ph &lt; eph; ph++)</span><br><span class="line">    <span class="comment">// p_pa is the load address of this segment (as well</span></span><br><span class="line">    <span class="comment">// as the physical address)</span></span><br><span class="line">    readseg(ph-&gt;p_pa, ph-&gt;p_memsz, ph-&gt;p_offset);</span><br></pre></td></tr></table></figure>
+<p>注释很清楚了，也就是分别获取起始地址和结束地址，再来个循环，分块读取。</p>
+<h3 id="Exercise-5"><a href="#Exercise-5" class="headerlink" title="Exercise 5"></a>Exercise 5</h3><p><code>ELF</code>二进制文件，文件开头是一唱串固定长度的<code>program header</code>，保存了程序所需要的各种<code>section</code>，比如<code>.text</code>保存了程序指令，<code>.data</code>则保存了已经初始化的静态变量，如<code>int x =0</code>。使用<code>objdump -h obj/kern/kernel</code>可查看段信息。其实特别需要注意<code>.text</code>段中的 <code>VMA</code> 和<code>LMA</code>列。分别代表链接地址<code>(link address)</code>和加载地址<code>(load address)</code>。 <code>VMA</code>指的是程序运行时的虚拟地址，而<code>LMA</code>则是程序真正载入到内存的时的物理地址。大部分时候这两个地址是一样的，但也有不同的时候。</p>
+<p>这个练习就是修改一下<code>boot/Makefrag</code>中<code>-Ttext 0x7C00</code>的地址，让<code>bootloader</code>的<code>VMA</code>和<code>LMA</code>不一样。重新编译运行，程序会崩溃。</p>
+<h3 id="Exercise-6"><a href="#Exercise-6" class="headerlink" title="Exercise 6"></a>Exercise 6</h3><blockquote>
+<p>Examine the 8 words of memory at 0x00100000 at the point the BIOS enters the boot loader, and then again at the point the boot loader enters the kernel. Why are they different? What is there at the second breakpoint? (You do not really need to use QEMU to answer this question. Just think.)</p>
+</blockquote>
+<p>实验结果如下</p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-04%2013-38-22%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p>当<code>bootloader</code> 运行之前<code>0x00100000</code>是空，运行完之后，被填充满了。猜想是<code>bootloader</code>把<code>kernel</code>填充到这里来了。查看代码，确实如此。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/* AT(...) gives the load address of this section, which tells</span><br><span class="line">   the boot loader where to load the kernel in physical memory */</span><br><span class="line">.text : AT(0x100000) &#123;</span><br><span class="line">    *(.text .stub .text.* .gnu.linkonce.t.*)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Exercise-7"><a href="#Exercise-7" class="headerlink" title="Exercise 7"></a>Exercise 7</h3><blockquote>
+<p>Use QEMU and GDB to trace into the JOS kernel and stop at the <code>movl %eax, %cr0</code>. Examine memory at 0x00100000 and at 0xf0100000. Now, single step over that instruction using the stepi GDB command. Again, examine memory at 0x00100000 and at 0xf0100000. Make sure you understand what just happened.</p>
+<p>What is the first instruction <em>after</em> the new mapping is established that would fail to work properly if the mapping weren’t in place? Comment out the <code>movl %eax, %cr0</code> inkern/entry.S, trace into it, and see if you were right.</p>
+</blockquote>
+<p>实验结果如下</p>
+<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-04%2014-10-16%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p>当运行<code>movl %eax, %cr0</code> 之后， 两个地址都指向了同一个地方也就是<code>0x00100000</code>，说明完成了地址映射。当我们把<code>movl %eax, %cr0</code> 注释掉之后，<code>os</code>启动崩溃，生成错误如下。</p>
+<p><code>qemu: fatal: Trying to execute code outside RAM or ROM at 0xf010002c</code></p>
+<h3 id="Exercise-8"><a href="#Exercise-8" class="headerlink" title="Exercise 8"></a>Exercise 8</h3><blockquote>
+<p>We have omitted a small fragment of code - the code necessary to print octal numbers using patterns of the form “%o”. Find and fill in this code fragment.</p>
+</blockquote>
+<p>修改代码如下。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="string">'o'</span>:</span><br><span class="line">            <span class="comment">// Replace this with your code.</span></span><br><span class="line">            <span class="comment">//putch('X', putdat);</span></span><br><span class="line">            <span class="comment">//putch('X', putdat);</span></span><br><span class="line">            <span class="comment">//putch('X', putdat);</span></span><br><span class="line">            num = getuint(&amp;ap, lflag);</span><br><span class="line">            base = <span class="number">8</span>;</span><br><span class="line">            <span class="keyword">goto</span> number;</span><br></pre></td></tr></table></figure>
+<p>回答下列问题</p>
+<blockquote>
+<p>Explain the interface between printf.c and console.c. Specifically, what function does console.c export? How is this function used by printf.c?</p>
+</blockquote>
+<p><code>printf.c</code>在其<code>putch()</code>函数中调用了<code>cputchar()</code> 。<code>console.c</code> 封装了一些与硬件接触的函数，如<code>getchar()</code>与<code>cputchar()</code>。</p>
+<blockquote>
+<p>Explain the following from console.c:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="number">1</span>      <span class="keyword">if</span> (crt_pos &gt;= CRT_SIZE) &#123;</span><br><span class="line">&gt; <span class="number">2</span>              <span class="keyword">int</span> i;</span><br><span class="line">&gt; <span class="number">3</span>              memmove(crt_buf, crt_buf + CRT_COLS, (CRT_SIZE - CRT_COLS) * <span class="keyword">sizeof</span>(<span class="keyword">uint16_t</span>));</span><br><span class="line">&gt; <span class="number">4</span>              <span class="keyword">for</span> (i = CRT_SIZE - CRT_COLS; i &lt; CRT_SIZE; i++)</span><br><span class="line">&gt; <span class="number">5</span>                      crt_buf[i] = <span class="number">0x0700</span> | <span class="string">' '</span>;</span><br><span class="line">&gt; <span class="number">6</span>              crt_pos -= CRT_COLS;</span><br><span class="line">&gt; <span class="number">7</span>      &#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>处理屏幕满了的情况。丢弃第一行。然后把后面的往上移。</p>
+<blockquote>
+<p>For the following questions you might wish to consult the notes for Lecture 2. These notes cover GCC’s calling convention on the x86.</p>
+<p>Trace the execution of the following code step-by-step:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="keyword">int</span> x = <span class="number">1</span>, y = <span class="number">3</span>, z = <span class="number">4</span>;</span><br><span class="line">&gt; cprintf(<span class="string">"x %d, y %x, z %d\n"</span>, x, y, z);</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<blockquote>
+<ul>
+<li>In the call to <code>cprintf()</code>, to what does <code>fmt</code> point? To what does <code>ap</code> point?</li>
+<li>List (in order of execution) each call to <code>cons_putc</code>, <code>va_arg</code>, and <code>vcprintf</code>. For <code>cons_putc</code>, list its argument as well. For <code>va_arg</code>, list what <code>ap</code> points to before and after the call. For <code>vcprintf</code> list the values of its two arguments.</li>
+</ul>
+</blockquote>
+<p><code>fmt</code> 指向字符串 <code>$4 = 0xf0101b4e &quot;x %d, y %x, z %d\n&quot;</code> ，<code>ap</code> 则指向第二个参数的地址，即是<code>x</code>的地址。</p>
+<p>接下来我们跟踪调用</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cprintf (fmt=<span class="number">0xf0101b4e</span> <span class="string">"x %d, y %x, z %d\n"</span>)</span><br><span class="line">vcprintf (fmt=<span class="number">0xf0101b4e</span> <span class="string">"x %d, y %x, z %d\n"</span>, ap=<span class="number">0xf010ff64</span> <span class="string">"\001"</span>)</span><br><span class="line">vprintfmt (putch=<span class="number">0xf01008cf</span> &lt;putch&gt;, putdat=<span class="number">0xf010ff2c</span>, fmt=<span class="number">0xf0101b4e</span> <span class="string">"x %d, y %x, z %d\n"</span>, ap=<span class="number">0xf010ff64</span> <span class="string">"\001"</span>)</span><br><span class="line">cons_putc (c=<span class="number">120</span>)</span><br></pre></td></tr></table></figure>
+<p>当<code>va_arg</code>调用之后，<code>(va_list) 0xf010ff68 &quot;\003&quot;</code> 指向了第二个参数，也就是 <code>y</code>。</p>
+<blockquote>
+<p>Run the following code.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="keyword">unsigned</span> <span class="keyword">int</span> i = <span class="number">0x00646c72</span>;</span><br><span class="line">&gt; cprintf(<span class="string">"H%x Wo%s"</span>, <span class="number">57616</span>, &amp;i);</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<blockquote>
+<p>What is the output? </p>
+</blockquote>
+<p>输出为<code>He110 World</code> 。比较简单，不多做解释。</p>
+<blockquote>
+<p>In the following code, what is going to be printed after <code>&#39;y=&#39;</code>? (note: the answer is not a specific value.) Why does this happen?</p>
+<p>   <code>cprintf(&quot;x=%d y=%d&quot;, 3);</code></p>
+</blockquote>
+<p>输出为<code>x=3 y=-267380676</code>。因为只传入了一个参数，也就是<code>va_list</code>长度为一，当要输出第二个参数，<code>ap</code>处存放的是随机的数。</p>
+<blockquote>
+<p>Let’s say that GCC changed its calling convention so that it pushed arguments on the stack in declaration order, so that the last argument is pushed last. How would you have to change cprintf or its interface so that it would still be possible to pass it a variable number of arguments?</p>
+</blockquote>
+<p>既然要改变了入栈了，那么则要改变<code>va_arg</code>读取顺序。在网上找到一种方法。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> va_arg(ap,t) \</span></span><br><span class="line">   (*(t *)((ap -= __va_size(t)) + __va_size(t)))</span><br></pre></td></tr></table></figure>
+<h3 id="Exercise-9"><a href="#Exercise-9" class="headerlink" title="Exercise 9"></a>Exercise 9</h3><blockquote>
+<p>Determine where the kernel initializes its stack, and exactly where in memory its stack is located. How does the kernel reserve space for its stack? And at which “end” of this reserved area is the stack pointer initialized to point to?</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">movl    $0x0,%ebp           # nuke frame pointer</span><br><span class="line">movl    $(bootstacktop),%esp # Set the stack pointer</span><br></pre></td></tr></table></figure>
+<p><code>kern/entry.S</code> 中的上述代码设置了栈。根据反汇编文件可知，这个<code>bootstacktop</code>的地址为<code>0xf0110000</code> 。栈的预留靠<code>.space KSTKSIZE</code>实现。</p>
+<h3 id="Exercise-10"><a href="#Exercise-10" class="headerlink" title="Exercise 10"></a>Exercise 10</h3><blockquote>
+<p>To become familiar with the C calling conventions on the x86, find the address of the <code>test_backtrace</code> function in obj/kern/kernel.asm, set a breakpoint there, and examine what happens each time it gets called after the kernel starts. How many 32-bit words does each recursive nesting level of <code>test_backtrace</code> push on the stack, and what are those words?</p>
+</blockquote>
+<p>在 <code>obj/kern/kernel.asm</code> 中找到 函数的入口地址为<code>0xf0100040</code> 。接下来跟踪调试，查看每次<code>esp</code> 的变化。这里涉及到的是栈的知识，不多解释，最好的学习资料是<code>csapp</code>的<code>lab2</code>。</p>
+<p>每调用一次<code>test_backtrace</code>。会发生如下事情。</p>
+<ol>
+<li>压入参数</li>
+<li>压入返回地址，为下一行地址。</li>
+<li>压入<code>ebp</code></li>
+<li>更新<code>ebp</code>为<code>esp</code>的值，此时设立了函数的栈帧</li>
+<li>压入<code>ebx</code> 用来保存临时变量之类的</li>
+<li>扩大栈，也就是<code>esp</code>减去某个值<code>(栈是向下生长的)</code>，为函数分配空间</li>
+</ol>
+<p>通过<code>gdb</code>分析，每次调用会压入<code>8个字</code>。压入的内容就是我上面说的那些。</p>
+<h3 id="Exercise-11"><a href="#Exercise-11" class="headerlink" title="Exercise 11"></a>Exercise 11</h3><blockquote>
+<p> Implement the backtrace function as specified above</p>
+</blockquote>
+<p>通过上面的分析，此题不难。无非是用<code>read_ebp</code>获得<code>ebp</code>，然后就可获得所有需要的内容。</p>
+<h3 id="Exercise-12"><a href="#Exercise-12" class="headerlink" title="Exercise 12"></a>Exercise 12</h3><blockquote>
+<p>Modify your stack backtrace function to display, for each eip, the function name, source file name, and line number corresponding to that eip.</p>
+</blockquote>
+<p>此题关键是补全<code>debuginfo_eip</code>，实现查找行号。下面是我的实现。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">stab_binsearch(stabs, &amp;lline, &amp;rline, N_SLINE, addr);</span><br><span class="line"><span class="keyword">if</span> (lline &gt; rline)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">info-&gt;eip_line = stabs[lline].n_desc;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>以上则是全部内容。具体代码在 <a href="https://github.com/threezj/mit6.828" target="_blank" rel="noopener">github:mit 6.828</a> 。看似短短的一个<code>lab1</code>，花费了大量的时间，确实不容易。虽然写的代码不多，但对操作系统启动的理解是很深入的。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://pdos.csail.mit.edu/6.828/2016/schedule.html" target="_blank" rel="noopener">mit 6.828 2016</a></p>
+<p><a href="http://www.cnblogs.com/fatsheep9146/" target="_blank" rel="noopener">fatsheep9146的csdn博客</a></p>
+<p><a href="https://github.com/valkjsaaa/PKU-OS-Labs" target="_blank" rel="noopener">valkjsaaa的github</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2016/11/06/MIT 6.828 lab1/" data-id="cjg0y8s08000fl35y16f66sd0" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MIT-6-828/">MIT 6.828</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Operating-system/">Operating system</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2016/11/14/MIT 6.828 lab2/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          MIT 6.828 lab2
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/10/30/生成学习算法/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">生成学习算法</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Algorithm/">Algorithm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Android/">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Computer-Network/">Computer Network</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Database-System/">Database System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-Computing/">Distributed Computing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Distributed-System/">Distributed System</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Java/">Java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MIT-6-828/">MIT 6.828</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Operating-system/">Operating system</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/杂/">杂</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Algorithm/" style="font-size: 20px;">Algorithm</a> <a href="/tags/Android/" style="font-size: 16px;">Android</a> <a href="/tags/Computer-Network/" style="font-size: 10px;">Computer Network</a> <a href="/tags/Database-System/" style="font-size: 10px;">Database System</a> <a href="/tags/Distributed-Computing/" style="font-size: 10px;">Distributed Computing</a> <a href="/tags/Distributed-System/" style="font-size: 10px;">Distributed System</a> <a href="/tags/Java/" style="font-size: 12px;">Java</a> <a href="/tags/MIT-6-828/" style="font-size: 14px;">MIT 6.828</a> <a href="/tags/Machine-Learning/" style="font-size: 12px;">Machine Learning</a> <a href="/tags/Operating-system/" style="font-size: 18px;">Operating system</a> <a href="/tags/Tomcat/" style="font-size: 10px;">Tomcat</a> <a href="/tags/杂/" style="font-size: 10px;">杂</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">December 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/11/">November 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">September 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">July 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">June 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/04/">April 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">March 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">January 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/12/">December 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">October 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/09/">September 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/06/11/Raft 共识算法/">Raft 共识算法</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/30/数据库事务与并发控制/">数据库事务与并发控制</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/18/计算机网络自顶向下之可靠传输协议的笔记/">计算机网络自顶向下之可靠传输协议的笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/07/MIT 6.828 lab5/">MIT 6.828 lab5</a>
+          </li>
+        
+          <li>
+            <a href="/2016/12/02/MIT 6.828 lab4/">MIT 6.828 lab4</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
