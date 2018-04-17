@@ -20,7 +20,7 @@
 <h2 id="并发控制"><a href="#并发控制" class="headerlink" title="并发控制"></a>并发控制</h2><p>考虑一下当多个事务并发执行的情况，是否能保证<code>ACID</code>。如果完全不加控制，因为系统的线程调度是无法预知的，那么多个事务之间的执行顺序也不可控，即破坏了<code>隔离性</code>，随之而来的<code>一致性</code>也无法满足，比如事务可能写入脏数据破坏完整性约束。<code>原子性</code>和<code>持久性</code>需要靠<code>恢复系统</code>来保证，这篇文章不过多讨论<code>恢复系统</code>。</p>
 <p>最简单的能想到的保持<code>隔离性</code>的方式即一次只运行一个事务，也就是说没有并发，<code>串行</code>调度，一个接一个。完全不需要并发控制，可是很明显不现实，因为效率极低。当事务并发执行时，任何调度顺序都是可能的。<code>并发控制</code>的任务是让并发的事务执行结果与串行调度的执行结果相同。这种调度称为<code>可串行化</code>。</p>
 <p>并发控制的目标即<code>可串行化</code>。</p>
-<h3 id="可串行化"><a href="#可串行化" class="headerlink" title="可串行化"></a>可串行化</h3><p>如何检测调度是否为<code>可串行化</code>？有很多方法，这里只说一种<code>冲突可串行化(conflict serializability)</code>。</p>
+<h4 id="可串行化"><a href="#可串行化" class="headerlink" title="可串行化"></a>可串行化</h4><p>如何检测调度是否为<code>可串行化</code>？有很多方法，这里只说一种<code>冲突可串行化(conflict serializability)</code>。</p>
 <p>先定义<code>冲突</code>，即假设不同事务的两种操作访问同一个对象，如果交换他们的操作顺序，会得到不同的结果，则<code>冲突</code>。</p>
 <p>考虑事务最本质的两种操作，<code>read</code>和<code>write</code>，则总共有四种情况。</p>
 <p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-28%2023-29-27%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
@@ -32,14 +32,14 @@
 </ol>
 <p>有些拗口。若无环，则是<code>冲突可串行化</code>，有环则不是，实例如下。</p>
 <p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-29%2021-04-17%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
-<h3 id="可恢复与无级联"><a href="#可恢复与无级联" class="headerlink" title="可恢复与无级联"></a>可恢复与无级联</h3><p>考虑下面一种情况</p>
+<h4 id="可恢复与无级联"><a href="#可恢复与无级联" class="headerlink" title="可恢复与无级联"></a>可恢复与无级联</h4><p>考虑下面一种情况</p>
 <p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-30%2015-26-46%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>上面这个调度的问题在于，事务2在读取了事务1的数据之后提交了，然而事务2因为某些原因终止了，那么事务2就要进行回滚。但是事务1已经提交了，提交意味着，数据已经被写入磁盘，原有的数据被覆盖，回滚会出错。这种调度则称为<code>不可恢复的调度</code>。若要实现<code>可恢复的调度</code>，则必须让事务2等待事务1提交之后，再进行提交。</p>
 <p>所以<code>可恢复调度</code>即是指，若某事务A读取事务B写入的内容，则需在事务B提交之后，再提交。</p>
 <p><code>可恢复调度</code>同时会带来一定的问题，即<code>级联</code>问题。若T2读了T1写的数据，T3读了T2写的数据，T4读了T3写的数据，以此类推，假设这时T1终止，则需要回滚一系列事务。这样效率是很低的。所以我们希望的是<code>无级联调度</code>，能避免这种情况。</p>
 <p><code>无级联调度</code>即是指，若事务A读取事务B写入的内容，那么事务B需要在事务A读操作之前提交。注意这里的区别，把事务提交提前了。</p>
 <p>并发控制希望做到<code>可串行化</code>，<code>可恢复</code>和<code>无级联</code>。<code>无级联调度</code>必定是<code>可恢复调度</code>。</p>
-<h3 id="两阶段封锁-Two-phase-locking"><a href="#两阶段封锁-Two-phase-locking" class="headerlink" title="两阶段封锁(Two phase locking)"></a>两阶段封锁(Two phase locking)</h3><p><code>Two phase locking</code>是一种可以实现<code>可串行化</code>的协议。此协议把事务分成两个阶段，<code>增长阶段</code>以及<code>缩减阶段</code>。<code>增长阶段</code>是获得锁的阶段，而<code>缩减阶段</code>则反之，是释放锁的阶段。也就说当一个事务一旦释放了一个锁之后就不能继续加锁了。具体定义如下。</p>
+<h4 id="两阶段封锁-Two-phase-locking"><a href="#两阶段封锁-Two-phase-locking" class="headerlink" title="两阶段封锁(Two phase locking)"></a>两阶段封锁(Two phase locking)</h4><p><code>Two phase locking</code>是一种可以实现<code>可串行化</code>的协议。此协议把事务分成两个阶段，<code>增长阶段</code>以及<code>缩减阶段</code>。<code>增长阶段</code>是获得锁的阶段，而<code>缩减阶段</code>则反之，是释放锁的阶段。也就说当一个事务一旦释放了一个锁之后就不能继续加锁了。具体定义如下。</p>
 <ul>
 <li><code>增长阶段(growing phase)</code>: 事务可以获得锁，但不能释放锁</li>
 <li><code>缩减阶段(shrinking phase)</code>: 事务可以释放锁，但不能获得锁</li>

@@ -15,7 +15,7 @@
 <p>当出现坏事的时候，我们学习就会困难，可以直接说不能学习。所以这个坏事出现的概率是多少呢？把所有h中发生坏事的几率加起来。</p>
 <p><img src="http://7xrsib.com1.z0.glb.clouddn.com/Screenshot.png" alt=""></p>
 <p>从上图的式子中可以看到，坏事发生的几率和<code>M</code>有关。<code>M</code>也就是<code>h</code>的个数。<br>从现在的条件来看，如果<code>M</code>很大甚至无线的话那么<code>Learning</code>是不可行的。</p>
-<h3 id="无效的Hypothesis"><a href="#无效的Hypothesis" class="headerlink" title="无效的Hypothesis"></a>无效的Hypothesis</h3><p>真实的情况是<code>M</code>一般不会很大，请再仔细看看上一张图的推导，<code>M</code>是通过把所有的<code>h</code>坏事发生的概率加起来的，但是其实这些<code>h</code>不是互相独立的。所以这些<code>h</code>是有重复的，如下图。</p>
+<h4 id="无效的Hypothesis"><a href="#无效的Hypothesis" class="headerlink" title="无效的Hypothesis"></a>无效的Hypothesis</h4><p>真实的情况是<code>M</code>一般不会很大，请再仔细看看上一张图的推导，<code>M</code>是通过把所有的<code>h</code>坏事发生的概率加起来的，但是其实这些<code>h</code>不是互相独立的。所以这些<code>h</code>是有重复的，如下图。</p>
 <p><img src="http://beader.me/mlnotebook/section2/images/hypothesis_overlap.png" alt=""></p>
 <p>比如说，我们想学习的<code>target function</code>是一条把<code>x1</code>分类成正负的线。现在<code>h</code>就有无数个，因为任意一条线都能分类，但是实际有意义的只有两种，分成正的和负的。<br>如果是两个点的话，实际有效的<code>h</code>就有4种，但是3个点就有可能不到8种了，因为会出现三点共线的情况。4个点的话按理说有16种，但是同样有一种情况不会发生，请看下图。</p>
 <p><img src="http://7xrsib.com1.z0.glb.clouddn.com/Screenshot1.png" alt=""></p>

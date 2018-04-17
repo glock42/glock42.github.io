@@ -15,7 +15,7 @@
 </ol>
 <h2 id="关于实模式和保护模式"><a href="#关于实模式和保护模式" class="headerlink" title="关于实模式和保护模式"></a>关于实模式和保护模式</h2><p>实模式即是当<code>PC</code>加电时，处于的模式，仅仅只有<code>16位</code>寻址能力。实模式将内存看成分段的区域。程序段和数据位于不同的区域。但是不区分<code>kernel</code>的操作还是用户的操作，也就是说每一个指针都指向实际的物理地址。很明显，这是致命的。可以通过修改<code>A20</code>地址线可以完成从实模式到保护模式的转换，具体如何转换我也不是很清楚，有兴趣的朋友自己研究。</p>
 <p>在实模式下，地址如下翻译 <code>physical address = 16 * segment + offset</code>。目前你只需要知道在保护模式下，地址翻译与实模式下不同即可。</p>
-<h2 id="Exercise"><a href="#Exercise" class="headerlink" title="Exercise"></a>Exercise</h2><h3 id="Exercise-3"><a href="#Exercise-3" class="headerlink" title="Exercise 3"></a>Exercise 3</h3><blockquote>
+<h2 id="Exercise"><a href="#Exercise" class="headerlink" title="Exercise"></a>Exercise</h2><h4 id="Exercise-3"><a href="#Exercise-3" class="headerlink" title="Exercise 3"></a>Exercise 3</h4><blockquote>
 <p>At what point does the processor start executing 32-bit code? What exactly causes the switch from 16- to 32-bit mode?</p>
 </blockquote>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># Switch from real to protected mode, using a bootstrap GDT</span><br><span class="line"># and segment translation that makes virtual addresses</span><br><span class="line"># identical to their physical addresses, so that the</span><br><span class="line"># effective memory map does not change during the switch.</span><br><span class="line">lgdt    gdtdesc</span><br><span class="line">movl    %cr0, %eax</span><br><span class="line">orl     $CR0_PE_ON, %eax</span><br><span class="line">movl    %eax, %cr0</span><br><span class="line"></span><br><span class="line"># Jump to next instruction, but in 32-bit code segment.</span><br><span class="line"># Switches processor into 32-bit mode.</span><br><span class="line">ljmp    $PROT_MODE_CSEG, $protcseg</span><br></pre></td></tr></table></figure>
@@ -36,16 +36,16 @@
 </blockquote>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ph = (struct Proghdr *) ((<span class="keyword">uint8_t</span> *) ELFHDR + ELFHDR-&gt;e_phoff); <span class="comment">//e_phoff是header表的位置偏移</span></span><br><span class="line">eph = ph + ELFHDR-&gt;e_phnum;   <span class="comment">//e_phnum是header的数目</span></span><br><span class="line"><span class="keyword">for</span> (; ph &lt; eph; ph++)</span><br><span class="line">    <span class="comment">// p_pa is the load address of this segment (as well</span></span><br><span class="line">    <span class="comment">// as the physical address)</span></span><br><span class="line">    readseg(ph-&gt;p_pa, ph-&gt;p_memsz, ph-&gt;p_offset);</span><br></pre></td></tr></table></figure>
 <p>注释很清楚了，也就是分别获取起始地址和结束地址，再来个循环，分块读取。</p>
-<h3 id="Exercise-5"><a href="#Exercise-5" class="headerlink" title="Exercise 5"></a>Exercise 5</h3><p><code>ELF</code>二进制文件，文件开头是一唱串固定长度的<code>program header</code>，保存了程序所需要的各种<code>section</code>，比如<code>.text</code>保存了程序指令，<code>.data</code>则保存了已经初始化的静态变量，如<code>int x =0</code>。使用<code>objdump -h obj/kern/kernel</code>可查看段信息。其实特别需要注意<code>.text</code>段中的 <code>VMA</code> 和<code>LMA</code>列。分别代表链接地址<code>(link address)</code>和加载地址<code>(load address)</code>。 <code>VMA</code>指的是程序运行时的虚拟地址，而<code>LMA</code>则是程序真正载入到内存的时的物理地址。大部分时候这两个地址是一样的，但也有不同的时候。</p>
+<h4 id="Exercise-5"><a href="#Exercise-5" class="headerlink" title="Exercise 5"></a>Exercise 5</h4><p><code>ELF</code>二进制文件，文件开头是一唱串固定长度的<code>program header</code>，保存了程序所需要的各种<code>section</code>，比如<code>.text</code>保存了程序指令，<code>.data</code>则保存了已经初始化的静态变量，如<code>int x =0</code>。使用<code>objdump -h obj/kern/kernel</code>可查看段信息。其实特别需要注意<code>.text</code>段中的 <code>VMA</code> 和<code>LMA</code>列。分别代表链接地址<code>(link address)</code>和加载地址<code>(load address)</code>。 <code>VMA</code>指的是程序运行时的虚拟地址，而<code>LMA</code>则是程序真正载入到内存的时的物理地址。大部分时候这两个地址是一样的，但也有不同的时候。</p>
 <p>这个练习就是修改一下<code>boot/Makefrag</code>中<code>-Ttext 0x7C00</code>的地址，让<code>bootloader</code>的<code>VMA</code>和<code>LMA</code>不一样。重新编译运行，程序会崩溃。</p>
-<h3 id="Exercise-6"><a href="#Exercise-6" class="headerlink" title="Exercise 6"></a>Exercise 6</h3><blockquote>
+<h4 id="Exercise-6"><a href="#Exercise-6" class="headerlink" title="Exercise 6"></a>Exercise 6</h4><blockquote>
 <p>Examine the 8 words of memory at 0x00100000 at the point the BIOS enters the boot loader, and then again at the point the boot loader enters the kernel. Why are they different? What is there at the second breakpoint? (You do not really need to use QEMU to answer this question. Just think.)</p>
 </blockquote>
 <p>实验结果如下</p>
 <p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-04%2013-38-22%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>当<code>bootloader</code> 运行之前<code>0x00100000</code>是空，运行完之后，被填充满了。猜想是<code>bootloader</code>把<code>kernel</code>填充到这里来了。查看代码，确实如此。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/* AT(...) gives the load address of this section, which tells</span><br><span class="line">   the boot loader where to load the kernel in physical memory */</span><br><span class="line">.text : AT(0x100000) &#123;</span><br><span class="line">    *(.text .stub .text.* .gnu.linkonce.t.*)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="Exercise-7"><a href="#Exercise-7" class="headerlink" title="Exercise 7"></a>Exercise 7</h3><blockquote>
+<h4 id="Exercise-7"><a href="#Exercise-7" class="headerlink" title="Exercise 7"></a>Exercise 7</h4><blockquote>
 <p>Use QEMU and GDB to trace into the JOS kernel and stop at the <code>movl %eax, %cr0</code>. Examine memory at 0x00100000 and at 0xf0100000. Now, single step over that instruction using the stepi GDB command. Again, examine memory at 0x00100000 and at 0xf0100000. Make sure you understand what just happened.</p>
 <p>What is the first instruction <em>after</em> the new mapping is established that would fail to work properly if the mapping weren’t in place? Comment out the <code>movl %eax, %cr0</code> inkern/entry.S, trace into it, and see if you were right.</p>
 </blockquote>
@@ -53,7 +53,7 @@
 <p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-04%2014-10-16%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>当运行<code>movl %eax, %cr0</code> 之后， 两个地址都指向了同一个地方也就是<code>0x00100000</code>，说明完成了地址映射。当我们把<code>movl %eax, %cr0</code> 注释掉之后，<code>os</code>启动崩溃，生成错误如下。</p>
 <p><code>qemu: fatal: Trying to execute code outside RAM or ROM at 0xf010002c</code></p>
-<h3 id="Exercise-8"><a href="#Exercise-8" class="headerlink" title="Exercise 8"></a>Exercise 8</h3><blockquote>
+<h4 id="Exercise-8"><a href="#Exercise-8" class="headerlink" title="Exercise 8"></a>Exercise 8</h4><blockquote>
 <p>We have omitted a small fragment of code - the code necessary to print octal numbers using patterns of the form “%o”. Find and fill in this code fragment.</p>
 </blockquote>
 <p>修改代码如下。</p>
@@ -101,12 +101,12 @@
 </blockquote>
 <p>既然要改变了入栈了，那么则要改变<code>va_arg</code>读取顺序。在网上找到一种方法。</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> va_arg(ap,t) \</span></span><br><span class="line">   (*(t *)((ap -= __va_size(t)) + __va_size(t)))</span><br></pre></td></tr></table></figure>
-<h3 id="Exercise-9"><a href="#Exercise-9" class="headerlink" title="Exercise 9"></a>Exercise 9</h3><blockquote>
+<h4 id="Exercise-9"><a href="#Exercise-9" class="headerlink" title="Exercise 9"></a>Exercise 9</h4><blockquote>
 <p>Determine where the kernel initializes its stack, and exactly where in memory its stack is located. How does the kernel reserve space for its stack? And at which “end” of this reserved area is the stack pointer initialized to point to?</p>
 </blockquote>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">movl    $0x0,%ebp           # nuke frame pointer</span><br><span class="line">movl    $(bootstacktop),%esp # Set the stack pointer</span><br></pre></td></tr></table></figure>
 <p><code>kern/entry.S</code> 中的上述代码设置了栈。根据反汇编文件可知，这个<code>bootstacktop</code>的地址为<code>0xf0110000</code> 。栈的预留靠<code>.space KSTKSIZE</code>实现。</p>
-<h3 id="Exercise-10"><a href="#Exercise-10" class="headerlink" title="Exercise 10"></a>Exercise 10</h3><blockquote>
+<h4 id="Exercise-10"><a href="#Exercise-10" class="headerlink" title="Exercise 10"></a>Exercise 10</h4><blockquote>
 <p>To become familiar with the C calling conventions on the x86, find the address of the <code>test_backtrace</code> function in obj/kern/kernel.asm, set a breakpoint there, and examine what happens each time it gets called after the kernel starts. How many 32-bit words does each recursive nesting level of <code>test_backtrace</code> push on the stack, and what are those words?</p>
 </blockquote>
 <p>在 <code>obj/kern/kernel.asm</code> 中找到 函数的入口地址为<code>0xf0100040</code> 。接下来跟踪调试，查看每次<code>esp</code> 的变化。这里涉及到的是栈的知识，不多解释，最好的学习资料是<code>csapp</code>的<code>lab2</code>。</p>
@@ -120,11 +120,11 @@
 <li>扩大栈，也就是<code>esp</code>减去某个值<code>(栈是向下生长的)</code>，为函数分配空间</li>
 </ol>
 <p>通过<code>gdb</code>分析，每次调用会压入<code>8个字</code>。压入的内容就是我上面说的那些。</p>
-<h3 id="Exercise-11"><a href="#Exercise-11" class="headerlink" title="Exercise 11"></a>Exercise 11</h3><blockquote>
+<h4 id="Exercise-11"><a href="#Exercise-11" class="headerlink" title="Exercise 11"></a>Exercise 11</h4><blockquote>
 <p> Implement the backtrace function as specified above</p>
 </blockquote>
 <p>通过上面的分析，此题不难。无非是用<code>read_ebp</code>获得<code>ebp</code>，然后就可获得所有需要的内容。</p>
-<h3 id="Exercise-12"><a href="#Exercise-12" class="headerlink" title="Exercise 12"></a>Exercise 12</h3><blockquote>
+<h4 id="Exercise-12"><a href="#Exercise-12" class="headerlink" title="Exercise 12"></a>Exercise 12</h4><blockquote>
 <p>Modify your stack backtrace function to display, for each eip, the function name, source file name, and line number corresponding to that eip.</p>
 </blockquote>
 <p>此题关键是补全<code>debuginfo_eip</code>，实现查找行号。下面是我的实现。</p>

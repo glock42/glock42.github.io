@@ -1,8 +1,8 @@
 <!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 计算机网络自顶向下之可靠传输协议的笔记 · 一派胡言</title><meta name="description" content="计算机网络自顶向下之可靠传输协议的笔记 - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://weibo.com/zjthree" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">计算机网络自顶向下之可靠传输协议的笔记</h1><div class="post-info">2016年12月18日</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>此篇文章是<code>计算机网络 自顶向下方法</code>第三章的简略版笔记，这一章非常精彩。个人认为运输层可以说是计算网络中最重要的一层，分别面向应用层以及网络层。众所周知，网络层是无法保证可靠传输的。所以运输层根本的问题在于<code>如何能够在不可靠的网络层之上进行可靠的网络</code>。</p>
 <h2 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h2><p><code>UDP</code>几乎没有做事情，仅仅只是把应用层的数据加上报文段，然后交付给网络层，虽然<code>UDP</code>有差错检查，但它也只是丢弃这个包而已。应用程序采用<code>UDP</code>的主要是基于效率的考虑。<code>UDP</code>简单，所以效率高。本文不讨论<code>UDP</code>。</p>
 <h2 id="可靠数据传输"><a href="#可靠数据传输" class="headerlink" title="可靠数据传输"></a>可靠数据传输</h2><p>这一节我们从最简单的情况开始，针对各种情况，慢慢完善，最终形成一个可靠的数据传输协议。<code>TCP</code>是一个<code>全双工</code>的协议，双方可以互相发送信息。目前我们只考虑单向的传输。</p>
-<h3 id="假设网络层可靠"><a href="#假设网络层可靠" class="headerlink" title="假设网络层可靠"></a>假设网络层可靠</h3><p>最开始我们先假设网络层是可靠的，也就是说我们交付给网络层的包不会丢失且完好无损，同时假设发送和接受双方速率是一样的。这种情况下我们需要考虑什么？什么都不需要考虑。就像<code>UDP</code>一样，打包好交付给网络层即可。相当于在网络层实现了可靠传输。<br><a id="more"></a></p>
-<h3 id="假设网络层只存在数据损坏的情况"><a href="#假设网络层只存在数据损坏的情况" class="headerlink" title="假设网络层只存在数据损坏的情况"></a>假设网络层只存在数据损坏的情况</h3><p>现在我们假设网络层只存在数据损坏的情况，也就是每个包都能到达目标主机，但是数据正确性却不受控制。这种情况我们需要考虑两个问题。</p>
+<h4 id="假设网络层可靠"><a href="#假设网络层可靠" class="headerlink" title="假设网络层可靠"></a>假设网络层可靠</h4><p>最开始我们先假设网络层是可靠的，也就是说我们交付给网络层的包不会丢失且完好无损，同时假设发送和接受双方速率是一样的。这种情况下我们需要考虑什么？什么都不需要考虑。就像<code>UDP</code>一样，打包好交付给网络层即可。相当于在网络层实现了可靠传输。<br><a id="more"></a></p>
+<h4 id="假设网络层只存在数据损坏的情况"><a href="#假设网络层只存在数据损坏的情况" class="headerlink" title="假设网络层只存在数据损坏的情况"></a>假设网络层只存在数据损坏的情况</h4><p>现在我们假设网络层只存在数据损坏的情况，也就是每个包都能到达目标主机，但是数据正确性却不受控制。这种情况我们需要考虑两个问题。</p>
 <ul>
 <li>如何判断数据损坏？</li>
 <li>如何通知发送方数据损坏？</li>
@@ -23,8 +23,8 @@
 <p>接收方很简单，接收到数据以后进行<code>差错检查</code>，若错误则进行反馈<code>NAK</code>，反之则发送<code>ACK</code>。</p>
 <h4 id="反馈出错的情况"><a href="#反馈出错的情况" class="headerlink" title="反馈出错的情况"></a>反馈出错的情况</h4><p>新的问题，那就是反馈的<code>ACK</code>或者<code>NAK</code>出错！改如何解决，最先想到的就是发送方再问一遍，也就是再发一个包给接收方，问他刚刚说了什么，那如果这个包再出错的？这个方案显然有问题。另一种方法是当收到错误的<code>ACK</code>或者<code>NAK</code>，则直接进行重发。这种方法的问题是接受方不知道新接收的包是重传还是新发送的包。比如说接收方反馈<code>ACK</code>给发送方，但数据损坏发送方直接进行重发，那么接受方会认为这个新的包是全新的数据，而不是重发的，造成<code>冗余分组</code>。</p>
 <p>解决这种情况一个很巧妙的方法，加入<code>序号</code>。也就是说对需要发送的数据包按顺序编号，那么接受方只需要检查<code>序号</code>即可确实这是否是一个重传的包。即检查新接受的包与上一次正确接受的包的<code>序号</code>进行比对，若相同则是重发，若大与则是新的包。有了<code>序号</code>之后，我们可以不用<code>NAK</code>，只用<code>ACK</code>，也能达到<code>NCK</code>的效果，即重发上一次正确接收的<code>ACK</code>，接收方比对<code>序号</code>可知数据包受损。</p>
-<h3 id="网络层发送数据丢失"><a href="#网络层发送数据丢失" class="headerlink" title="网络层发送数据丢失"></a>网络层发送数据丢失</h3><p>好，新的问题来了。数据包丢失怎么办？按照之前的讨论，发送方会一直等待接收方进行<code>ACK反馈</code>，若数据包丢失，发送方则会一直阻塞。很自然的就想到采用定时器，等待一定时间之后，若发送方没得到反馈，则自动进行重传。但是如何确定等待时间又是个问题。可以确定的是，等待时间一定大于往返时延加上接受端处理数据包的时间。这是个比较复杂的问题，之后再讨论。</p>
-<h3 id="超时处理"><a href="#超时处理" class="headerlink" title="超时处理"></a>超时处理</h3><p>还记得前面提到的，当发送方发送数据之后需要阻塞等待接受确认。这种方式叫做<code>停等协议</code>。可想而知效率很低，几乎大部分的时间都用来等待了。根据<code>计算机网络 自顶向下方法</code>上面的描述，采用<code>停等协议</code>的情况下，发送方只有<code>万分之2.7</code>的时间是在真正工作的！</p>
+<h4 id="网络层发送数据丢失"><a href="#网络层发送数据丢失" class="headerlink" title="网络层发送数据丢失"></a>网络层发送数据丢失</h4><p>好，新的问题来了。数据包丢失怎么办？按照之前的讨论，发送方会一直等待接收方进行<code>ACK反馈</code>，若数据包丢失，发送方则会一直阻塞。很自然的就想到采用定时器，等待一定时间之后，若发送方没得到反馈，则自动进行重传。但是如何确定等待时间又是个问题。可以确定的是，等待时间一定大于往返时延加上接受端处理数据包的时间。这是个比较复杂的问题，之后再讨论。</p>
+<h4 id="超时处理"><a href="#超时处理" class="headerlink" title="超时处理"></a>超时处理</h4><p>还记得前面提到的，当发送方发送数据之后需要阻塞等待接受确认。这种方式叫做<code>停等协议</code>。可想而知效率很低，几乎大部分的时间都用来等待了。根据<code>计算机网络 自顶向下方法</code>上面的描述，采用<code>停等协议</code>的情况下，发送方只有<code>万分之2.7</code>的时间是在真正工作的！</p>
 <p>之前的方法是一次发送一个数据包，然后进行阻塞等待。现在解决方法是发送多个数据包，然后再进行阻塞等待。注意这里是有本质的区别的。先前都是发一个等一个。现在是发送<code>n</code>个分组，并一起进行等待确认。区别在于发送的数据包的<code>ACK</code>可以在阻塞之前返回，那么则不需要等待之前发送的分组，可以继续向前移动。就好像铺铁路一样，其实并不需要那么长的铁轨，只需要很短一段铁轨就可以让火车绕世界一圈，只要你铺的够快。下面的图更加形象。</p>
 <p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-13%2023-20-07%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>当遇到数据丢失或的情况，有两种方法可以解决。分别是<code>回退N步</code>和<code>选择重传</code></p>
@@ -38,7 +38,7 @@
 <h2 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h2><p>终于轮到<code>TCP</code>了，但核心在上面。<code>TCP</code>用到了上述的所有原理比如<code>差错检查</code>，<code>累计确认</code>，<code>重传</code>，<code>定时器</code>等。<code>TCP</code>是面向连接的全双工运输层协议。也就是说<code>TCP</code>在通信之前，必须要建立一条可靠的连接，通过这条连接来进行通信。这点在使用<code>socket</code>编程的时候，十分明显。当客户端想发送消息给服务端时，必须先调用<code>connect</code>函数。</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">self.socket.connect((self.address, self.port))</span><br><span class="line">self.send(self.name)</span><br></pre></td></tr></table></figure>
 <p><code>socket</code>是操作系统对<code>TCP</code>的一层抽象，提供接口让应用更加方便的使用<code>TCP</code>。</p>
-<h3 id="TCP报文段"><a href="#TCP报文段" class="headerlink" title="TCP报文段"></a>TCP报文段</h3><p><img src="http://www.nosa.me/wp-content/uploads/2015/08/C9FBBF9A-04FE-4F2B-81E8-559391153C73.jpg" alt=""></p>
+<h4 id="TCP报文段"><a href="#TCP报文段" class="headerlink" title="TCP报文段"></a>TCP报文段</h4><p><img src="http://www.nosa.me/wp-content/uploads/2015/08/C9FBBF9A-04FE-4F2B-81E8-559391153C73.jpg" alt=""></p>
 <ul>
 <li><p>源端口号和目标端口号</p>
 <p>各占用<code>16</code>位，源端口号和目标端口号再加上源地址和目的地址构成<code>socket</code>的唯一标识。</p>
@@ -66,7 +66,7 @@
 <p>这里可以填<code>MSS</code>之类的数据。</p>
 </li>
 </ul>
-<h3 id="TCP的三次握手"><a href="#TCP的三次握手" class="headerlink" title="TCP的三次握手"></a>TCP的三次握手</h3><p>先来讨论下<code>TCP</code>的链接建立，为了建立可靠的通信链接，<code>TCP</code>需要发送三个分组，前两个分组不能携带数据，最后一个是可以携带数据的。也就是所谓的三次握手了。</p>
+<h4 id="TCP的三次握手"><a href="#TCP的三次握手" class="headerlink" title="TCP的三次握手"></a>TCP的三次握手</h4><p>先来讨论下<code>TCP</code>的链接建立，为了建立可靠的通信链接，<code>TCP</code>需要发送三个分组，前两个分组不能携带数据，最后一个是可以携带数据的。也就是所谓的三次握手了。</p>
 <ul>
 <li><p>第一次</p>
 <p>客户端向服务端发送<code>TCP</code>报文段，注意这里是不能包含有效数据的。报文段首部的控制位中<code>SYN</code>位会设置成<code>1</code>，表明这是连接请求报文段。还有就是初始化客户端的<code>起始序号</code>放在<code>顺序位</code>中，一般是随机选的。</p>
@@ -79,7 +79,7 @@
 </li>
 </ul>
 <p>到这里不得不谈网上经典的面试题，<code>TCP建立连接为什么需要三次握手？</code>。让我们回到<code>TCP</code>的目的，是为了在不可靠的网络层之上建立可靠的运输协议。那么从这个角度来考虑，如果客户端不确认服务端的允许连接报文会发生什么？假设现在<code>TCP</code>经过服务端允许连接以后，连接就已经建立了。如果现在有一个无效的<code>TCP</code>请求连接发送到服务端，有可能是因为网络阻塞等原因。服务端则会认为这是一个客户端的新的连接请求，因为不需要客户端确认，则直接建立连接，然而这个连接其实是不需要的，白白浪费资源。如果加上第三次，客户端会确认这个请求是失效的，则不会建立连接。</p>
-<h3 id="TCP的数据传输"><a href="#TCP的数据传输" class="headerlink" title="TCP的数据传输"></a>TCP的数据传输</h3><p><code>TCP</code>的可靠数据传输基本原理可以说已经包含在上半部分的介绍当中了。主要是三大原理<code>序号</code>，<code>累计确认</code>和<code>超时重传</code>。但是<code>TCP</code>根据实际情况加入了一些比较有趣的东西，比如<code>快速重传</code>，<code>冗余确认</code>等。</p>
+<h4 id="TCP的数据传输"><a href="#TCP的数据传输" class="headerlink" title="TCP的数据传输"></a>TCP的数据传输</h4><p><code>TCP</code>的可靠数据传输基本原理可以说已经包含在上半部分的介绍当中了。主要是三大原理<code>序号</code>，<code>累计确认</code>和<code>超时重传</code>。但是<code>TCP</code>根据实际情况加入了一些比较有趣的东西，比如<code>快速重传</code>，<code>冗余确认</code>等。</p>
 <h4 id="简化版的TCP传输"><a href="#简化版的TCP传输" class="headerlink" title="简化版的TCP传输"></a>简化版的TCP传输</h4><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-14%2023-16-55%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>首先初始化序号位，以及<code>sendBase</code>(也就是第一位未被确认的序号或者说下一个需要发送的序号)。比如说发送<code>seq=1</code>，<code>seq=2</code>,<code>seq=3</code>都未被确认，那么<code>sendBase</code>就为<code>1</code>，然后之后得到一个<code>seq=3</code>的<code>ACK=4</code>，那么则认为<code>seq=1</code>和<code>seq=2</code>都被收到了，则<code>sendBase</code>变为<code>4</code>。避免了重传，原因是接收方采用了<code>累积确认</code>。</p>
 <p>考虑到实际使用中的情况，<code>TCP</code>增加了一些功能。</p>
