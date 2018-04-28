@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://threezj.com/"/>
-  <updated>2018-04-28T12:36:39.806Z</updated>
+  <updated>2018-04-28T12:40:15.731Z</updated>
   <id>http://threezj.com/</id>
   
   <author>
@@ -17,24 +17,25 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title></title>
+    <title>论文阅读 [SOSP&#39; 91] The Design and Implementation of a Log-Structured File System</title>
     <link href="http://threezj.com/2018/04/28/LFS/"/>
     <id>http://threezj.com/2018/04/28/LFS/</id>
-    <published>2018-04-28T10:15:18.898Z</published>
-    <updated>2018-04-28T12:36:39.806Z</updated>
+    <published>2018-04-28T12:36:06.000Z</published>
+    <updated>2018-04-28T12:40:15.731Z</updated>
     
-    <content type="html"><![CDATA[<p>title: 论文阅读: [SOSP’ 91] The Design and Implementation of a Log-Structured File System<br>date: 2018-04-28 20:36:06</p><h2 id="tags-“File-System”"><a href="#tags-“File-System”" class="headerlink" title="tags: [“File System”]"></a>tags: [“File System”]</h2><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这两天花了点时间读了下<code>The Design and Implementation of a Log-Structured File System</code>，92年的一篇经典文章。Idea其实很简单，就是利用大内存缓存足够多的内容后，然后一次性顺序的写到磁盘中。LFS的所有写入都是顺序添加。极大提升写效率。思想简单，但是实现比较tricky，有各种细节需要注意，却不复杂，很符合人类直觉。</p><h2 id="位置在变化的inode"><a href="#位置在变化的inode" class="headerlink" title="位置在变化的inode"></a>位置在变化的inode</h2><p>LFS比较关键的一个点，在于inode不是存在一个fix的位置，而是每次写入一个新的块的时候，都会生成新的inode。之所以这样做是因为，传统的文件系统将inode放在fix位置，当添加或者更新块的时候，需要seek到某个位置去更新inode，物理运动极其耗时。而LFS这样做了之后，只需要顺序接下去写就行了。</p><p>但是寻找inode又是一个问题，传统文件中，反正inode数组位置是固定的，只需要位置加上filenumber偏移量就可以了。而在LFS中，存在一个叫imap的数组来索引到最新的inode。也就是说当每次写的时候，在最后总会加上一块imap，来索引最新的inode地址（旧的失效）。到最后整个磁盘中有很多分块的imap。</p><p>但是最后还是需要一块fix的位置来存磁盘中所有最新的imap的地址，即checkpoint region(CR)。比如说放在磁盘最开始的地方。CR肯定是需要磁盘seek过去更新，不过这个更新是周期性的，长时间的，比如30秒。而且所有最新imap，是足够小，可以存在内存的。所以只需要磁盘挂载的时候一次性seek到各个位置读入一次所有的imap即可（所有目的都是为了减少seek）。</p><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180428-174248@2x.png" alt=""></p><p>大概情况如上图。当然还有目录的情况，目录其实也是个文件(保存file name: file number的映射)    ，所以处理其实是和普通文件一样的。</p><h2 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h2><p>垃圾回收对LFS的性能影响最大的一方面。由于LFS是顺序写的，每次都会产生新的数据块，那么旧的数据块则需要处理掉。处理方式也很简单，比如说一大块连续的磁盘空间(segment)，简单的将一段segment中所有live的数据块，顺序的写出即可，那么原先的segment既可以复用了。这种方式可以尽可能保留大块的连续空间，而是很多的碎片。</p><p>判断数据块是否过期(live)，也是需要处理的问题。论文中提出两种方法，这边讲一种。两种方法都是要在segment中保留一块 <code>segment summary block</code>。<code>segment summary block</code>记录每一个block的file  number和版本号，同时会在imap里保存最新的版本号。每次判断的时候只需要判断版本号有没有过期即可。</p><p>文章中有这么一句话对垃圾回收的性能影响的概括。</p><blockquote><p> Overall, Sprite LFS permits about 65-75% of a disk’s raw bandwidth to be used for writing new data (the rest is used for cleaning). For comparison, Unix systems can only utilize 5-10% of a disk’s raw bandwidth for writing new data; the rest of the time is spent seeking.        </p></blockquote><h2 id="Crash-recovery"><a href="#Crash-recovery" class="headerlink" title="Crash recovery"></a>Crash recovery</h2><p>LFS的恢复也很方便，所有的imap地址都会周期性的更新到CR中，所以恢复的时候只要直接CR中读即可。这里有个问题是有可能在写入CR的时候断电，导致数据不一致。LFS采用了使用两块CR的方式，两块交替着，在写的时候，开头和结尾都会加上时间戳，若没有相匹配的时间戳，说明这块CR数据一致性有问题。则读取另一块。还有一个问题就是，CR更新时间有间隔，所以会损失几秒种的数据，论文中提到可以在log上向前继续扫描恢复数据，因为LFS是只顺序添加的。</p><h2 id="不足之处"><a href="#不足之处" class="headerlink" title="不足之处"></a>不足之处</h2><p>论文中也到了LFS的不足之处，就在随机写一个文件后，会生成很多新的块，相互之间不连续，当需要连续读的时候，将会导致更多的seek。</p><blockquote><p>Even for other workloads, such as those including reads and large-file accesses, Sprite LFS is at least as fast as Unix in all cases but one (files read sequentially after being written randomly).</p></blockquote><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] The Design and Implementation of a Log-Structured File System. SOSP 91’</p><p>[2] Operating Systems: Three Easy Pieces. Chapter: Log-structured File Systems</p><p>​<br>​<br>​    </p><p>​<br>​<br>​    </p><p>​<br>​<br>​    </p><p>​<br>​<br>​    </p><p>​<br>​<br>​    </p><p>​<br>​<br>​    </p><p>​<br>​<br>​<br>​    </p>]]></content>
+    <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这两天花了点时间读了下<code>The Design and Implementation of a Log-Structured File System</code>，92年的一篇经典文章。Idea其实很简单，就是利用大内存缓存足够多的内容后，然后一次性顺序的写到磁盘中。LFS的所有写入都是顺序添加。极大提升写效率。思想简单，但是实现比较tricky，有各种细节需要注意，却不复杂，很符合人类直觉。</p><h2 id="位置在变化的inode"><a href="#位置在变化的inode" class="headerlink" title="位置在变化的inode"></a>位置在变化的inode</h2><p>LFS比较关键的一个点，在于inode不是存在一个fix的位置，而是每次写入一个新的块的时候，都会生成新的inode。之所以这样做是因为，传统的文件系统将inode放在fix位置，当添加或者更新块的时候，需要seek到某个位置去更新inode，物理运动极其耗时。而LFS这样做了之后，只需要顺序接下去写就行了。</p><p>但是寻找inode又是一个问题，传统文件中，反正inode数组位置是固定的，只需要位置加上filenumber偏移量就可以了。而在LFS中，存在一个叫imap的数组来索引到最新的inode。也就是说当每次写的时候，在最后总会加上一块imap，来索引最新的inode地址（旧的失效）。到最后整个磁盘中有很多分块的imap。</p><p>但是最后还是需要一块fix的位置来存磁盘中所有最新的imap的地址，即checkpoint region(CR)。比如说放在磁盘最开始的地方。CR肯定是需要磁盘seek过去更新，不过这个更新是周期性的，长时间的，比如30秒。而且所有最新imap，是足够小，可以存在内存的。所以只需要磁盘挂载的时候一次性seek到各个位置读入一次所有的imap即可（所有目的都是为了减少seek）。</p><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180428-174248@2x.png" alt=""></p><p>大概情况如上图。当然还有目录的情况，目录其实也是个文件(保存file name: file number的映射)    ，所以处理其实是和普通文件一样的。</p><h2 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h2><p>垃圾回收对LFS的性能影响最大的一方面。由于LFS是顺序写的，每次都会产生新的数据块，那么旧的数据块则需要处理掉。处理方式也很简单，比如说一大块连续的磁盘空间(segment)，简单的将一段segment中所有live的数据块，顺序的写出即可，那么原先的segment既可以复用了。这种方式可以尽可能保留大块的连续空间，而是很多的碎片。</p><p>判断数据块是否过期(live)，也是需要处理的问题。论文中提出两种方法，这边讲一种。两种方法都是要在segment中保留一块 <code>segment summary block</code>。<code>segment summary block</code>记录每一个block的file  number和版本号，同时会在imap里保存最新的版本号。每次判断的时候只需要判断版本号有没有过期即可。</p><p>文章中有这么一句话对垃圾回收的性能影响的概括。</p><blockquote><p> Overall, Sprite LFS permits about 65-75% of a disk’s raw bandwidth to be used for writing new data (the rest is used for cleaning). For comparison, Unix systems can only utilize 5-10% of a disk’s raw bandwidth for writing new data; the rest of the time is spent seeking.        </p></blockquote><h2 id="Crash-recovery"><a href="#Crash-recovery" class="headerlink" title="Crash recovery"></a>Crash recovery</h2><p>LFS的恢复也很方便，所有的imap地址都会周期性的更新到CR中，所以恢复的时候只要直接CR中读即可。这里有个问题是有可能在写入CR的时候断电，导致数据不一致。LFS采用了使用两块CR的方式，两块交替着，在写的时候，开头和结尾都会加上时间戳，若没有相匹配的时间戳，说明这块CR数据一致性有问题。则读取另一块。还有一个问题就是，CR更新时间有间隔，所以会损失几秒种的数据，论文中提到可以在log上向前继续扫描恢复数据，因为LFS是只顺序添加的。</p><h2 id="不足之处"><a href="#不足之处" class="headerlink" title="不足之处"></a>不足之处</h2><p>论文中也到了LFS的不足之处，就在随机写一个文件后，会生成很多新的块，相互之间不连续，当需要连续读的时候，将会导致更多的seek。</p><blockquote><p>Even for other workloads, such as those including reads and large-file accesses, Sprite LFS is at least as fast as Unix in all cases but one (files read sequentially after being written randomly).</p></blockquote><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] The Design and Implementation of a Log-Structured File System. SOSP 91’</p><p>[2] Operating Systems: Three Easy Pieces. Chapter: Log-structured File Systems</p><p>​<br>​<br>​    </p><p>​<br>​<br>​    </p><p>​<br>​<br>​    </p><p>​<br>​<br>​    </p><p>​<br>​<br>​    </p><p>​<br>​<br>​    </p><p>​<br>​<br>​<br>​    </p>]]></content>
     
     <summary type="html">
     
       
       
-        &lt;p&gt;title: 论文阅读: [SOSP’ 91] The Design and Implementation of a Log-Structured File System&lt;br&gt;date: 2018-04-28 20:36:06&lt;/p&gt;
-&lt;h2 id=&quot;tags-“File
+        &lt;h2 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h2&gt;&lt;p&gt;这两天花了点时间读了下&lt;code&gt;The Design and Implementation of a Log-Structured Fil
       
     
     </summary>
     
+    
+      <category term="File System" scheme="http://threezj.com/tags/File-System/"/>
     
   </entry>
   
