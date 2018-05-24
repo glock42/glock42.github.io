@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://threezj.com/"/>
-  <updated>2018-05-24T09:26:24.096Z</updated>
+  <updated>2018-05-24T09:28:13.424Z</updated>
   <id>http://threezj.com/</id>
   
   <author>
@@ -21,17 +21,27 @@
     <link href="http://threezj.com/2018/05/23/Database%20Storage%20and%20Buffer%20pools%20note/"/>
     <id>http://threezj.com/2018/05/23/Database Storage and Buffer pools note/</id>
     <published>2018-05-23T09:24:06.000Z</published>
-    <updated>2018-05-24T09:26:24.096Z</updated>
+    <updated>2018-05-24T09:28:13.424Z</updated>
     
-    <content type="html"><![CDATA[<h2 id="Goals-of-the-DBMS"><a href="#Goals-of-the-DBMS" class="headerlink" title="Goals of the DBMS"></a>Goals of the DBMS</h2><ul><li>Allow the DBMS to manage databases that exceed the amount of memory available</li><li>Reading/writing to disk is expensive, so it must be managed carefully</li></ul><p>DBMS总是希望自己来管理所有东西，而不是依靠操作系统</p><h2 id="File-Storage"><a href="#File-Storage" class="headerlink" title="File Storage"></a>File Storage</h2><ul><li>最简单的形式，一张表存储一个文件。但是也有多个关联的表存在一个文件的实现。</li><li>操作系统对于db的文件内容是不关心。</li></ul><p>每个file由多个page组成，有多种不同的方式来存储，</p><ul><li>Heap File</li><li>Sequential File</li><li>Hashing File</li><li>Log-Structured File </li></ul><h4 id="Heap-File"><a href="#Heap-File" class="headerlink" title="Heap File"></a>Heap File</h4><p>page在文件是无序的可以任意放，一般有两种方式组织</p><ul><li>Linker List：用两个链表，data list和free list。这种方式在获取某个page的时候用时较长，需要遍历链表。</li><li>Page Directory：用一个特殊的page，来存所有page的位置。一般采用这种。</li></ul><h4 id="Sequential-File"><a href="#Sequential-File" class="headerlink" title="Sequential File"></a>Sequential File</h4><p>所有Tuple是按照某个特定的键（比如主键）排序存放的。在根据特殊键操作表的时候性能会Heap形式要好</p><h4 id="Log-Structred"><a href="#Log-Structred" class="headerlink" title="Log-Structred"></a>Log-Structred</h4><p>不存储tuple，只存储log（即insert，delete，update操作）。当查找的时候，反向搜索，recreate一个tuple。插入快，读慢。一般会考虑额外建立索引来维护log，并定期压缩。</p><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180524-164401.png" alt=""></p><h2 id="Database-Page"><a href="#Database-Page" class="headerlink" title="Database Page"></a>Database Page</h2><ul><li>单个文件分成多个page，每个page的大小是固定大小的</li></ul><p>page的存储格式是多样的。为了支持变长的<code>Tuple</code>，一般的存储格式为<code>slotted-page structure</code>如下图。</p><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180524-162444.png" alt=""> </p><p>当中间的Tuple被删除的时候，前面的Tuple需要往后移来对齐。这个移动的性能消耗不是太高，因为一般page大小也就4k。若Tuple过大，超过一个page的大小，一般会考虑采用一个额外的overflow page来保存。</p><h2 id="Tuple-layout"><a href="#Tuple-layout" class="headerlink" title="Tuple layout"></a>Tuple layout</h2><p>tuple才是真实的一条记录，即一串二进制序列，由database负责解释。分为两块。</p><ul><li>header：metadata，每个属性的位置和长度，bitmap来快速发现null属性</li><li>data</li></ul><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180524-165218@2x.png" alt=""></p><p>目前普遍是按行存的做法，某些情况不是很好，比如应用只需要一行的其中一个数据，但db会将整行都读入，浪费io带宽。也有一些按列存的数据库。比如单个page只存某个属性的数据。</p><h2 id="Different-type-of-the-DBMS-in-different-workloads"><a href="#Different-type-of-the-DBMS-in-different-workloads" class="headerlink" title="Different type of the DBMS in different workloads"></a>Different type of the DBMS in different workloads</h2><ul><li>OLTP: On-line transaction processing 适合简单增删改操作，事务短，操作快的类型</li><li>OLAP: On-line analyitical processing 适合复杂的分析操作，需要运行较长时间。</li></ul><h2 id="Buffer-pool"><a href="#Buffer-pool" class="headerlink" title="Buffer pool"></a>Buffer pool</h2><p>类似虚拟内存。让database可以管理超出内存大小的数据。也就在内存维护cache，以page为单位，来换入换出。</p><ul><li>脏页换出需要写入磁盘</li><li>pin counter：当有线程在使用这个页的时候，不能换出。</li></ul><h4 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h4><ul><li>多个buffer pool，减少锁竞争</li><li>根据query plan，进行预读取。</li><li>cursor共享。两个不同query，但是可能读取的东西是相同，可以依附于同一个cursor来读，更好利用缓存。</li></ul><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul><li>cmu 15445</li><li>Database System Concepts 6th Edition</li></ul>]]></content>
+    <content type="html"><![CDATA[<h2 id="Goals-of-the-DBMS"><a href="#Goals-of-the-DBMS" class="headerlink" title="Goals of the DBMS"></a>Goals of the DBMS</h2><ul><li>Allow the DBMS to manage databases that exceed the amount of memory available</li><li>Reading/writing to disk is expensive, so it must be managed carefully</li></ul><p>DBMS总是希望自己来管理所有东西，而不是依靠操作系统</p><h2 id="File-Storage"><a href="#File-Storage" class="headerlink" title="File Storage"></a>File Storage</h2><ul><li>最简单的形式，一张表存储一个文件。但是也有多个关联的表存在一个文件的实现。</li><li>操作系统对于db的文件内容是不关心。</li></ul><p>每个file由多个page组成，有多种不同的方式来存储，</p><ul><li>Heap File</li><li>Sequential File</li><li>Hashing File</li><li>Log-Structured File <a id="more"></a></li></ul><h4 id="Heap-File"><a href="#Heap-File" class="headerlink" title="Heap File"></a>Heap File</h4><p>page在文件是无序的可以任意放，一般有两种方式组织</p><ul><li>Linker List：用两个链表，data list和free list。这种方式在获取某个page的时候用时较长，需要遍历链表。</li><li>Page Directory：用一个特殊的page，来存所有page的位置。一般采用这种。</li></ul><h4 id="Sequential-File"><a href="#Sequential-File" class="headerlink" title="Sequential File"></a>Sequential File</h4><p>所有Tuple是按照某个特定的键（比如主键）排序存放的。在根据特殊键操作表的时候性能会Heap形式要好</p><h4 id="Log-Structred"><a href="#Log-Structred" class="headerlink" title="Log-Structred"></a>Log-Structred</h4><p>不存储tuple，只存储log（即insert，delete，update操作）。当查找的时候，反向搜索，recreate一个tuple。插入快，读慢。一般会考虑额外建立索引来维护log，并定期压缩。</p><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180524-164401.png" alt=""></p><h2 id="Database-Page"><a href="#Database-Page" class="headerlink" title="Database Page"></a>Database Page</h2><ul><li>单个文件分成多个page，每个page的大小是固定大小的</li></ul><p>page的存储格式是多样的。为了支持变长的<code>Tuple</code>，一般的存储格式为<code>slotted-page structure</code>如下图。</p><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180524-162444.png" alt=""> </p><p>当中间的Tuple被删除的时候，前面的Tuple需要往后移来对齐。这个移动的性能消耗不是太高，因为一般page大小也就4k。若Tuple过大，超过一个page的大小，一般会考虑采用一个额外的overflow page来保存。</p><h2 id="Tuple-layout"><a href="#Tuple-layout" class="headerlink" title="Tuple layout"></a>Tuple layout</h2><p>tuple才是真实的一条记录，即一串二进制序列，由database负责解释。分为两块。</p><ul><li>header：metadata，每个属性的位置和长度，bitmap来快速发现null属性</li><li>data</li></ul><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180524-165218@2x.png" alt=""></p><p>目前普遍是按行存的做法，某些情况不是很好，比如应用只需要一行的其中一个数据，但db会将整行都读入，浪费io带宽。也有一些按列存的数据库。比如单个page只存某个属性的数据。</p><h2 id="Different-type-of-the-DBMS-in-different-workloads"><a href="#Different-type-of-the-DBMS-in-different-workloads" class="headerlink" title="Different type of the DBMS in different workloads"></a>Different type of the DBMS in different workloads</h2><ul><li>OLTP: On-line transaction processing 适合简单增删改操作，事务短，操作快的类型</li><li>OLAP: On-line analyitical processing 适合复杂的分析操作，需要运行较长时间。</li></ul><h2 id="Buffer-pool"><a href="#Buffer-pool" class="headerlink" title="Buffer pool"></a>Buffer pool</h2><p>类似虚拟内存。让database可以管理超出内存大小的数据。也就在内存维护cache，以page为单位，来换入换出。</p><ul><li>脏页换出需要写入磁盘</li><li>pin counter：当有线程在使用这个页的时候，不能换出。</li></ul><h4 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h4><ul><li>多个buffer pool，减少锁竞争</li><li>根据query plan，进行预读取。</li><li>cursor共享。两个不同query，但是可能读取的东西是相同，可以依附于同一个cursor来读，更好利用缓存。</li></ul><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul><li>cmu 15445</li><li>Database System Concepts 6th Edition</li></ul>]]></content>
     
     <summary type="html">
     
-      
-      
-        &lt;h2 id=&quot;Goals-of-the-DBMS&quot;&gt;&lt;a href=&quot;#Goals-of-the-DBMS&quot; class=&quot;headerlink&quot; title=&quot;Goals of the DBMS&quot;&gt;&lt;/a&gt;Goals of the DBMS&lt;/h2&gt;&lt;ul&gt;
-&lt;li&gt;Allo
-      
+      &lt;h2 id=&quot;Goals-of-the-DBMS&quot;&gt;&lt;a href=&quot;#Goals-of-the-DBMS&quot; class=&quot;headerlink&quot; title=&quot;Goals of the DBMS&quot;&gt;&lt;/a&gt;Goals of the DBMS&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Allow the DBMS to manage databases that exceed the amount of memory available&lt;/li&gt;
+&lt;li&gt;Reading/writing to disk is expensive, so it must be managed carefully&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;DBMS总是希望自己来管理所有东西，而不是依靠操作系统&lt;/p&gt;
+&lt;h2 id=&quot;File-Storage&quot;&gt;&lt;a href=&quot;#File-Storage&quot; class=&quot;headerlink&quot; title=&quot;File Storage&quot;&gt;&lt;/a&gt;File Storage&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;最简单的形式，一张表存储一个文件。但是也有多个关联的表存在一个文件的实现。&lt;/li&gt;
+&lt;li&gt;操作系统对于db的文件内容是不关心。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;每个file由多个page组成，有多种不同的方式来存储，&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Heap File&lt;/li&gt;
+&lt;li&gt;Sequential File&lt;/li&gt;
+&lt;li&gt;Hashing File&lt;/li&gt;
+&lt;li&gt;Log-Structured File
     
     </summary>
     
