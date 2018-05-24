@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://threezj.com/2018/05/23/Database%20Storage%20and%20Buffer%20pools%20note/</loc>
+    
+    <lastmod>2018-05-24T09:26:24.096Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://threezj.com/2018/04/28/LFS/</loc>
     
     <lastmod>2018-05-03T12:47:34.624Z</lastmod>
