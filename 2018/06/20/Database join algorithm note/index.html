@@ -29,8 +29,7 @@
 <li>Grace Hash Join 内存不够，table不能fit进memory</li>
 </ul>
 <p>hash join 只能在等值join的情况下使用</p>
-<p>###basic hash join </p>
-<p>核心思想也较为简单，就是通过对两张表hash以后，比较相同值的tuple进行连接。</p>
+<h3 id="basic-hash-join"><a href="#basic-hash-join" class="headerlink" title="basic hash join"></a>basic hash join</h3><p>核心思想也较为简单，就是通过对两张表hash以后，比较相同值的tuple进行连接。</p>
 <ol>
 <li>先使用一个较小的表，扫描一遍，建立hash table （build phase）</li>
 <li>扫描另一个表，使用相同的hash函数，定位到相同的bucket，进行match比较 （probe phase）</li>
