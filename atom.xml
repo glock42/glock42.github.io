@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://threezj.com/"/>
-  <updated>2018-06-20T15:05:21.406Z</updated>
+  <updated>2018-07-05T12:28:39.040Z</updated>
   <id>http://threezj.com/</id>
   
   <author>
@@ -15,6 +15,41 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Database concurrency control note</title>
+    <link href="http://threezj.com/2018/07/05/Database%20concurrency%20control%20note/"/>
+    <id>http://threezj.com/2018/07/05/Database concurrency control note/</id>
+    <published>2018-07-05T12:28:06.000Z</published>
+    <updated>2018-07-05T12:28:39.040Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="Locking-in-B-Tree"><a href="#Locking-in-B-Tree" class="headerlink" title="Locking in B+Tree"></a>Locking in B+Tree</h2><p>使用2PL在index上效果会很差，因为每次使用索引时都会lock root，导致其他事务无法访问。Index一般使用<code>Lock crabbing</code>。</p><h4 id="Basic-Lock-Crabbing"><a href="#Basic-Lock-Crabbing" class="headerlink" title="Basic Lock Crabbing"></a>Basic Lock Crabbing</h4><ol><li>search<ul><li>获取parent的S lock</li><li>接着到下一层获取child的S lock</li><li>释放上一层parent的S lock，如此循环。</li></ul></li><li>insert/delete<ul><li>获取parent的X lock</li><li>到下一层，获取child的X lock</li><li>如果安全的话则释放parent的X lock。安全即是指child没有分裂或者合并。也就是说有足够的空间插入，或者足够多的节点删除。不然继续到一层，如此循环。</li></ul></li></ol><p>在删除或者插入的情况下，如果节点都满或者都不够的话很有可能整条链上都有锁，一直到leaf节点才会逐级向上释放，并发性比较差，由此引入一种优化的方案。<br><a id="more"></a></p><h4 id="Optimistic-Lock-Coupling"><a href="#Optimistic-Lock-Coupling" class="headerlink" title="Optimistic Lock Coupling"></a>Optimistic Lock Coupling</h4><p>基本思想就是在插入或者删除的时候和查找一样获取S lock，直到叶子节点时，如果需要分裂或者合并再采用上面的算法重来一遍。也就是先假设合并或者分裂比较少见。若真发生了再上X锁。</p><h2 id="Timestamp-Ordering-Concurrency-Control"><a href="#Timestamp-Ordering-Concurrency-Control" class="headerlink" title="Timestamp Ordering Concurrency Control"></a>Timestamp Ordering Concurrency Control</h2><p>通过时间戳来确定事务的先后顺序而不是采用锁。</p><p>在事务启动前，分配时间戳。若TS(T1)&lt;TS(T2)则DBMS必须确保执行顺序与T1在T2之前的串行调度一样。</p><h4 id="BASIC-T-O"><a href="#BASIC-T-O" class="headerlink" title="BASIC T/O"></a>BASIC T/O</h4><ol><li>Read X<ul><li>如果TS(Ti) &lt; W-TS(X)，则违法了顺序，也就是Ti希望去读在Ti之后的事务写的数据了。这种情况下需要中上事务，或者重启</li><li>若相反，则可以读，并且需要更新R-TS(X) = max(R-TS(X), TS(Ti))。也就是将最大的读事务的timestamp记录下，当写的时候可以用来比较。</li></ul></li><li>Write X<ul><li>若果TS(Ti) &lt; R-TS(X) 或者 TS(Ti) &lt; W-TS(X)，与上面一样，也是违法了顺序。则终止或重启。</li><li>如相反，则允许写，并且更新W-TS(X) = Ti</li></ul></li></ol><p>这里有一种优化方法，也就是时TS(Ti) &lt; W-TS(X)，忽略写，让事务继续。因为反正Ti的write都会之后的事务覆盖。这种方法叫Thomas Write Rule</p><h2 id="Optimistic-Concurrency-Control-OCC"><a href="#Optimistic-Concurrency-Control-OCC" class="headerlink" title="Optimistic Concurrency Control (OCC)"></a>Optimistic Concurrency Control (OCC)</h2><p>与悲观锁相反，假设冲突发生的情况比较少，不加锁，直到冲突发生后，再重试。当每个事务运行的时候都会copy一份内容作为private workspace。事务的所有的操作都在private workspace中，只有等提交时才会写到真正的数据库中。具体的实施如下。</p><ul><li>Read phase：将需要写的那部分数据copy到private workspace</li><li>Validation phase： 当事务提交的事务，检查是否与其他事务冲突。</li><li>Write phase：若无冲突，则将修改的部分写入数据库。反之则终止或重启。</li></ul>]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;Locking-in-B-Tree&quot;&gt;&lt;a href=&quot;#Locking-in-B-Tree&quot; class=&quot;headerlink&quot; title=&quot;Locking in B+Tree&quot;&gt;&lt;/a&gt;Locking in B+Tree&lt;/h2&gt;&lt;p&gt;使用2PL在index上效果会很差，因为每次使用索引时都会lock root，导致其他事务无法访问。Index一般使用&lt;code&gt;Lock crabbing&lt;/code&gt;。&lt;/p&gt;
+&lt;h4 id=&quot;Basic-Lock-Crabbing&quot;&gt;&lt;a href=&quot;#Basic-Lock-Crabbing&quot; class=&quot;headerlink&quot; title=&quot;Basic Lock Crabbing&quot;&gt;&lt;/a&gt;Basic Lock Crabbing&lt;/h4&gt;&lt;ol&gt;
+&lt;li&gt;search&lt;ul&gt;
+&lt;li&gt;获取parent的S lock&lt;/li&gt;
+&lt;li&gt;接着到下一层获取child的S lock&lt;/li&gt;
+&lt;li&gt;释放上一层parent的S lock，如此循环。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;insert/delete&lt;ul&gt;
+&lt;li&gt;获取parent的X lock&lt;/li&gt;
+&lt;li&gt;到下一层，获取child的X lock&lt;/li&gt;
+&lt;li&gt;如果安全的话则释放parent的X lock。安全即是指child没有分裂或者合并。也就是说有足够的空间插入，或者足够多的节点删除。不然继续到一层，如此循环。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;在删除或者插入的情况下，如果节点都满或者都不够的话很有可能整条链上都有锁，一直到leaf节点才会逐级向上释放，并发性比较差，由此引入一种优化的方案。&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="Database" scheme="http://threezj.com/tags/Database/"/>
+    
+  </entry>
   
   <entry>
     <title>Database join algorithm note</title>
@@ -532,30 +567,6 @@
 &lt;li&gt;&lt;code&gt;Topological sort&lt;/code&gt;    //适用于无环&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;Bellman-Ford&lt;/code&gt;        //适用于无负环&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-    
-    </summary>
-    
-    
-      <category term="Algorithm" scheme="http://threezj.com/tags/Algorithm/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>最小生成树,Prim和Kruskal详细学习笔记</title>
-    <link href="http://threezj.com/2016/04/24/%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91,Prim%E5%92%8CKruskal%E8%AF%A6%E7%BB%86%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
-    <id>http://threezj.com/2016/04/24/最小生成树,Prim和Kruskal详细学习笔记/</id>
-    <published>2016-04-24T07:13:06.000Z</published>
-    <updated>2018-04-17T15:35:46.342Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><blockquote><p>最小生成树是一副连通加权无向图中一棵权值最小的生成树。<br>最小生成树其实是<strong>最小权重生成树</strong>的简称。</p></blockquote><p>可能翻译为<code>最小权重生成树</code>更容易理解一些。意思就是说在图中的每条边都加上权值，所谓权值是一种抽象的含义。可以指代一切可以量化的东西。比如说修路的费用，路程等等。然后在图中找到这样一棵树，边的权值加起来最小。并且既然是棵树，必须满足的要求是无环.</p><p>一般用两种贪心算法来找到最小生成树，分别是<code>prim</code>和<code>Kruskal</code><br><a id="more"></a></p><h2 id="Kruskal"><a href="#Kruskal" class="headerlink" title="Kruskal"></a>Kruskal</h2><p><code>Kruskal</code> 算法，我觉得比较容易理解，实现也比较简单。</p><ol><li>新建图G</li><li>把图G中所有的边按照权值从小到大排序。(一般使用优先队列)</li><li>取出最小的边</li><li>如果这条边连接的两个节点于图G中不在同一个连通分量中，则添加这条边到图G中.(使用并查集)</li><li>重复3，直至图G中所有的节点都在同一个连通分量中</li></ol><h4 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">KruskalMST</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Queue&lt;Edge&gt; mst = <span class="keyword">new</span> Queue&lt;&gt;();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">double</span> weight;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">KruskalMST</span><span class="params">(EdgeWeightedGraph g)</span></span>&#123;</span><br><span class="line">        MinPQ&lt;Edge&gt; minPQ = <span class="keyword">new</span> MinPQ&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span> (Edge edge:g.edges())&#123;</span><br><span class="line">            minPQ.insert(edge);</span><br><span class="line">        &#125;</span><br><span class="line">        UF uf =<span class="keyword">new</span> UF(minPQ.size());</span><br><span class="line">        <span class="keyword">while</span> (!minPQ.isEmpty())&#123;</span><br><span class="line">            Edge edge = minPQ.delMin();</span><br><span class="line">            <span class="keyword">int</span> v = edge.either();</span><br><span class="line">            <span class="keyword">int</span> w = edge.other(v);</span><br><span class="line">            <span class="keyword">if</span>(!uf.connected(v,w))&#123;</span><br><span class="line">                uf.union(v,w);</span><br><span class="line">                mst.enqueue(edge);</span><br><span class="line">                <span class="comment">//weight+=edge.weight();</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h4 id="性能分析"><a href="#性能分析" class="headerlink" title="性能分析"></a>性能分析</h4><p><code>Kruskal</code> 算法 基本上取决于优先队列的选择，以及并查集的实现。</p><p>比较优的算法效率为<code>O(ElogE)</code>E为图中的边数.</p><p>对优先队列和并查集不了解的同学可以看看我这两篇文章，<a href="http://threezj.com/2016/03/20/%E6%9F%A5%E6%89%BE%E7%AE%97%E6%B3%95%E4%B9%8B%E9%A1%BA%E5%BA%8F%E3%80%81%E4%BA%8C%E5%88%86%E3%80%81%E4%BA%8C%E5%8F%89%E6%90%9C%E7%B4%A2%E6%A0%91%E3%80%81%E7%BA%A2%E9%BB%91%E6%A0%91/">查找算法之顺序、二分、二叉搜索树、红黑树</a> 和 <a href="http://threezj.com/2016/03/12/Union-Find%20/">并查集</a></p><h2 id="Prim"><a href="#Prim" class="headerlink" title="Prim"></a>Prim</h2><p><code>Prim</code>算法，简单的说就是<code>从一个点开始不断让树长大的过程,并且保持权值最小</code>。</p><ol><li>生成图G</li><li>从s点开始</li><li>把与s点相连的边都加入<code>edgeTo[]</code>,并且保存到这些点的距离<code>distTo[]</code>,且插入到优先队列</li><li>出队一个点</li><li>查找与这个点相连的点，若权值比<code>distTo[]</code>中保存的值小则进更新，同时更新<code>distTo[]</code>和优先队列.</li><li>重复4</li></ol><p>如下图</p><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/QQ%E6%88%AA%E5%9C%9620160424222602.jpg" alt=""></p><h4 id="实现代码-1"><a href="#实现代码-1" class="headerlink" title="实现代码"></a>实现代码</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Edge[] edgeTo;        <span class="comment">// edgeTo[v] = shortest edge from tree vertex to non-tree vertex</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">double</span>[] distTo;      <span class="comment">// distTo[v] = weight of shortest such edge</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">boolean</span>[] marked;     <span class="comment">// marked[v] = true if v on tree, false otherwise</span></span><br><span class="line"><span class="keyword">private</span> IndexMinPQ&lt;Double&gt; pq;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">PrimMST</span><span class="params">(EdgeWeightedGraph G)</span></span>&#123;</span><br><span class="line">    edgeTo = <span class="keyword">new</span> Edge[G.V()];</span><br><span class="line">    distTo = <span class="keyword">new</span> <span class="keyword">double</span>[G.V()];</span><br><span class="line">    marked = <span class="keyword">new</span> <span class="keyword">boolean</span>[G.V()];</span><br><span class="line">    pq = <span class="keyword">new</span> IndexMinPQ&lt;Double&gt;(G.V());</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> v = <span class="number">0</span>; v &lt; G.V(); v++)</span><br><span class="line">        distTo[v] = Double.POSITIVE_INFINITY;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> v = <span class="number">0</span>; v &lt; G.V(); v++)      <span class="comment">// run from each vertex to find</span></span><br><span class="line">        <span class="keyword">if</span> (!marked[v]) prim(G, v);      <span class="comment">// minimum spanning forest</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">prim</span><span class="params">(EdgeWeightedGraph g, <span class="keyword">int</span> s)</span> </span>&#123;</span><br><span class="line">    distTo[s]=<span class="number">0</span>;</span><br><span class="line">    pq.insert(s,distTo[s]);</span><br><span class="line">    <span class="keyword">while</span> (!pq.isEmpty())&#123;</span><br><span class="line">        grow(g,pq.delMin());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">grow</span><span class="params">(EdgeWeightedGraph g, <span class="keyword">int</span> v)</span> </span>&#123;</span><br><span class="line">    marked[v]=<span class="keyword">true</span>;</span><br><span class="line">    <span class="keyword">for</span> (Edge e :g.adj(v))&#123;</span><br><span class="line">        <span class="keyword">int</span> w = e.other(v);</span><br><span class="line">        <span class="keyword">if</span>(marked[w])   <span class="keyword">continue</span>;</span><br><span class="line">        <span class="keyword">if</span>(distTo[w]&gt;e.weight())&#123;</span><br><span class="line">            distTo[w]=e.weight();</span><br><span class="line">            edgeTo[w] = e;</span><br><span class="line">            <span class="keyword">if</span>(pq.contains(w))</span><br><span class="line">                pq.decreaseKey(w,distTo[w]);</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                pq.insert(w,distTo[w]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h4 id="性能分析-1"><a href="#性能分析-1" class="headerlink" title="性能分析"></a>性能分析</h4><p>具体性能也是取决于优先队列的选择，一般来说可以达到<code>O(ElogV)</code></p><h2 id="性能比较"><a href="#性能比较" class="headerlink" title="性能比较"></a>性能比较</h2><blockquote><p>Kruskal can have better performance if the edges can be sorted in linear time, or are already sorted.</p><p>Prim’s better if the number of edges to vertices is high.</p></blockquote><p>引用自<code>stackoverflow</code></p><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><code>维基百科</code></p><p><code>算法4th</code></p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;h2 id=&quot;定义&quot;&gt;&lt;a href=&quot;#定义&quot; class=&quot;headerlink&quot; title=&quot;定义&quot;&gt;&lt;/a&gt;定义&lt;/h2&gt;&lt;blockquote&gt;
-&lt;p&gt;最小生成树是一副连通加权无向图中一棵权值最小的生成树。&lt;br&gt;最小生成树其实是&lt;strong&gt;最小权重生成树&lt;/strong&gt;的简称。&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;可能翻译为&lt;code&gt;最小权重生成树&lt;/code&gt;更容易理解一些。意思就是说在图中的每条边都加上权值，所谓权值是一种抽象的含义。可以指代一切可以量化的东西。比如说修路的费用，路程等等。然后在图中找到这样一棵树，边的权值加起来最小。并且既然是棵树，必须满足的要求是无环.&lt;/p&gt;
-&lt;p&gt;一般用两种贪心算法来找到最小生成树，分别是&lt;code&gt;prim&lt;/code&gt;和&lt;code&gt;Kruskal&lt;/code&gt;&lt;br&gt;
     
     </summary>
     

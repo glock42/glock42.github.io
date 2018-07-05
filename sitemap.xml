@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://threezj.com/2018/07/05/Database%20concurrency%20control%20note/</loc>
+    
+    <lastmod>2018-07-05T12:28:39.040Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://threezj.com/2018/06/20/Database%20join%20algorithm%20note/</loc>
     
     <lastmod>2018-06-20T15:05:21.406Z</lastmod>
