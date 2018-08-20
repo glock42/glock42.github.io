@@ -9,6 +9,7 @@
 </li>
 <li><p>client-cache</p>
 <p>这主要为性能考虑，但同时为带来一致性问题。NFS通过前先通过getattr request发送给server，查看cache是否过期，一般是周期性的问一下，比如所3s。同时在close的时候将cache刷回server。</p>
+<a id="more"></a>
 </li>
 </ul>
 <h2 id="AFS"><a href="#AFS" class="headerlink" title="AFS"></a>AFS</h2><p>AFS却不同，它的goal为scale。也就是如何让server能支持更多的服务器。为了支持很多的client，要做的就是减少与client 与server的交互，也就减少了server的资源占用(cpu/network)。</p>
