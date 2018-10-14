@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://threezj.com/"/>
-  <updated>2018-10-14T15:14:32.525Z</updated>
+  <updated>2018-10-14T15:18:05.219Z</updated>
   <id>http://threezj.com/</id>
   
   <author>
@@ -17,24 +17,31 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title></title>
+    <title>论文笔记 Time, Clocks and the Ordering of Events in a Distributed System</title>
     <link href="http://threezj.com/2018/10/14/clock/"/>
     <id>http://threezj.com/2018/10/14/clock/</id>
-    <published>2018-10-14T13:36:15.999Z</published>
-    <updated>2018-10-14T15:14:32.525Z</updated>
+    <published>2018-10-14T15:14:06.000Z</published>
+    <updated>2018-10-14T15:18:05.219Z</updated>
     
-    <content type="html"><![CDATA[<p>title: 论文笔记 Time, Clocks and the Ordering of Events in a Distributed System<br>date: 2018-10-14 23:14:06</p><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在分布式系统中，如何确定两个事件发生的先后顺序是比较困难的。在不同机器上的物理时钟会有会有误差。Lamport在1978的文章<a href="http://research.microsoft.com/users/lamport/pubs/time-clocks.pdf" target="_blank" rel="noopener">Time, Clocks and the Ordering of Events in a Distributed System” (1978)</a>提出了一种Logical Clock 来描述分布式系统中的先后顺序。论文中先是定义了一种偏序的<code>happened before</code> 关系，通过这种关系给出了logical clock的算法，最后用logical clock实现了全序的分布式算法。</p><h2 id="Happened-before"><a href="#Happened-before" class="headerlink" title="Happened-before"></a>Happened-before</h2><p>Lamport提出用事件发生的先后因果关系来描述事件。若事件b依赖于a发生，则<code>a happened-before b</code>。定义如下。</p><ol><li>If a and b are events in the same process, and a comes before b, then a → b.</li><li>If a is the sending of a message by one process and b is the receipt of the same message by another process, then a → b.</li><li>if a→ b and b → c then a→c. </li></ol><p>若相互之间没有依赖关系，可认为是并行的。并发说明这两个事件谁先发生并不重要，这其实逻辑时钟的重要思想。Logical clock只保证你的系统不出错（即不违反相互依赖关系），而不能保证事件发生的真实顺序。</p><h2 id="Logical-Clock"><a href="#Logical-Clock" class="headerlink" title="Logical Clock"></a>Logical Clock</h2><p>Logical Clock就是给事件打上时间戳（一般实现为递增的序号）。如果a happended before b, 那么a的时间戳就要小于b。时间戳的逻辑遵循下面的规则。</p><ul><li>在同一个进程中，每发生一个事件则时间戳+1</li><li>不同进程中，进程A收到进程B的message, 其中包含B的时间戳为T， 则C(A) = max(T, C(A)) + 1</li></ul><p>若a-&gt;b, 则C(a) &lt; C(b), 但是反过来并不能成立。在并行的情况，时间戳的大小并不能反映事情发生的先后顺序，因为根本不重要。</p><h2 id="Total-Ordering"><a href="#Total-Ordering" class="headerlink" title="Total Ordering"></a>Total Ordering</h2><p>既然并行的情况，事件发生的顺序不重要。为了保证全局的顺序，就强制规定一种顺序，比如说机器编号，机器编号小的时间戳更小。由此，Lamport提出了基于Logical Clock的分布式算法。这个算法基于一个前提，message被一个进程发送给另一个进程，接收到的顺序是按照发出的顺序的。算法如下</p><p>首先，每个进程都维护一个request queue。</p><ol><li>假设进程A发送request message(RQ) 给其他进程，包含暑假戳T_rq在message里面。并且将RQ入队</li><li>当其他进程收到R时，进程将RQ入队，并发送ack给进程A（也要包含时间戳）</li><li>当进程A需要release资源的时候，进程A删除在队列里的RQ message，并发送release message(RL)给其它进程</li><li>当收到RL时，进程删除队列里所有来自进程A的RQ</li></ol><p>进程A只有满足以下条件才能获取资源：</p><ol><li>RQ是队里中的第一个request message，</li><li>进程A收到其它所有进程的message, 其中包含的时间戳&gt;T_rq。</li></ol><p>为什么这个算法可以work？通过上述两个条件，我们保证了所有进程都看到了RQ，并且按照前面的算法，RQ是按照Lamport Clock进行排序的。所有进程看到的都是同一个顺序。</p><p>这个算法也有一定的局限性，即需要所有进程参与，一旦某个进程挂掉了，整个system就不可用了。</p><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] Time, Clocks and the Ordering of Events in a Distributed System</p>]]></content>
+    <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在分布式系统中，如何确定两个事件发生的先后顺序是比较困难的。在不同机器上的物理时钟会有会有误差。Lamport在1978的文章<a href="http://research.microsoft.com/users/lamport/pubs/time-clocks.pdf" target="_blank" rel="noopener">Time, Clocks and the Ordering of Events in a Distributed System” (1978)</a>提出了一种Logical Clock 来描述分布式系统中的先后顺序。论文中先是定义了一种偏序的<code>happened before</code> 关系，通过这种关系给出了logical clock的算法，最后用logical clock实现了全序的分布式算法。</p><h2 id="Happened-before"><a href="#Happened-before" class="headerlink" title="Happened-before"></a>Happened-before</h2><p>Lamport提出用事件发生的先后因果关系来描述事件。若事件b依赖于a发生，则<code>a happened-before b</code>。定义如下。</p><ol><li>If a and b are events in the same process, and a comes before b, then a → b.</li><li>If a is the sending of a message by one process and b is the receipt of the same message by another process, then a → b.</li><li>if a→ b and b → c then a→c. </li></ol><p>若相互之间没有依赖关系，可认为是并行的。并发说明这两个事件谁先发生并不重要，这其实逻辑时钟的重要思想。Logical clock只保证你的系统不出错（即不违反相互依赖关系），而不能保证事件发生的真实顺序。<br><a id="more"></a></p><h2 id="Logical-Clock"><a href="#Logical-Clock" class="headerlink" title="Logical Clock"></a>Logical Clock</h2><p>Logical Clock就是给事件打上时间戳（一般实现为递增的序号）。如果a happended before b, 那么a的时间戳就要小于b。时间戳的逻辑遵循下面的规则。</p><ul><li>在同一个进程中，每发生一个事件则时间戳+1</li><li>不同进程中，进程A收到进程B的message, 其中包含B的时间戳为T， 则C(A) = max(T, C(A)) + 1</li></ul><p>若a-&gt;b, 则C(a) &lt; C(b), 但是反过来并不能成立。在并行的情况，时间戳的大小并不能反映事情发生的先后顺序，因为根本不重要。</p><h2 id="Total-Ordering"><a href="#Total-Ordering" class="headerlink" title="Total Ordering"></a>Total Ordering</h2><p>既然并行的情况，事件发生的顺序不重要。为了保证全局的顺序，就强制规定一种顺序，比如说机器编号，机器编号小的时间戳更小。由此，Lamport提出了基于Logical Clock的分布式算法。这个算法基于一个前提，message被一个进程发送给另一个进程，接收到的顺序是按照发出的顺序的。算法如下</p><p>首先，每个进程都维护一个request queue。</p><ol><li>假设进程A发送request message(RQ) 给其他进程，包含暑假戳T_rq在message里面。并且将RQ入队</li><li>当其他进程收到R时，进程将RQ入队，并发送ack给进程A（也要包含时间戳）</li><li>当进程A需要release资源的时候，进程A删除在队列里的RQ message，并发送release message(RL)给其它进程</li><li>当收到RL时，进程删除队列里所有来自进程A的RQ</li></ol><p>进程A只有满足以下条件才能获取资源：</p><ol><li>RQ是队里中的第一个request message，</li><li>进程A收到其它所有进程的message, 其中包含的时间戳&gt;T_rq。</li></ol><p>为什么这个算法可以work？通过上述两个条件，我们保证了所有进程都看到了RQ，并且按照前面的算法，RQ是按照Lamport Clock进行排序的。所有进程看到的都是同一个顺序。</p><p>这个算法也有一定的局限性，即需要所有进程参与，一旦某个进程挂掉了，整个system就不可用了。</p><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] Time, Clocks and the Ordering of Events in a Distributed System</p>]]></content>
     
     <summary type="html">
     
-      
-      
-        &lt;p&gt;title: 论文笔记 Time, Clocks and the Ordering of Events in a Distributed System&lt;br&gt;date: 2018-10-14 23:14:06&lt;/p&gt;
-&lt;h2 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; cl
-      
+      &lt;h2 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h2&gt;&lt;p&gt;在分布式系统中，如何确定两个事件发生的先后顺序是比较困难的。在不同机器上的物理时钟会有会有误差。Lamport在1978的文章&lt;a href=&quot;http://research.microsoft.com/users/lamport/pubs/time-clocks.pdf&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Time, Clocks and the Ordering of Events in a Distributed System” (1978)&lt;/a&gt;提出了一种Logical Clock 来描述分布式系统中的先后顺序。论文中先是定义了一种偏序的&lt;code&gt;happened before&lt;/code&gt; 关系，通过这种关系给出了logical clock的算法，最后用logical clock实现了全序的分布式算法。&lt;/p&gt;
+&lt;h2 id=&quot;Happened-before&quot;&gt;&lt;a href=&quot;#Happened-before&quot; class=&quot;headerlink&quot; title=&quot;Happened-before&quot;&gt;&lt;/a&gt;Happened-before&lt;/h2&gt;&lt;p&gt;Lamport提出用事件发生的先后因果关系来描述事件。若事件b依赖于a发生，则&lt;code&gt;a happened-before b&lt;/code&gt;。定义如下。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;If a and b are events in the same process, and a comes before b, then a → b.&lt;/li&gt;
+&lt;li&gt;If a is the sending of a message by one process and b is the receipt of the same message by another process, then a → b.&lt;/li&gt;
+&lt;li&gt;if a→ b and b → c then a→c. &lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;若相互之间没有依赖关系，可认为是并行的。并发说明这两个事件谁先发生并不重要，这其实逻辑时钟的重要思想。Logical clock只保证你的系统不出错（即不违反相互依赖关系），而不能保证事件发生的真实顺序。&lt;br&gt;
     
     </summary>
     
+    
+      <category term="Distributed System" scheme="http://threezj.com/tags/Distributed-System/"/>
+    
+      <category term="paper reading" scheme="http://threezj.com/tags/paper-reading/"/>
     
   </entry>
   
@@ -43,7 +50,7 @@
     <link href="http://threezj.com/2018/09/26/paxos/"/>
     <id>http://threezj.com/2018/09/26/paxos/</id>
     <published>2018-09-26T05:36:06.000Z</published>
-    <updated>2018-09-26T07:25:46.747Z</updated>
+    <updated>2018-10-14T15:18:04.094Z</updated>
     
     <content type="html"><![CDATA[<h2 id="Basic-Paxos"><a href="#Basic-Paxos" class="headerlink" title="Basic Paxos"></a>Basic Paxos</h2><blockquote><p>The Paxos algorithm, when presented in plain English, is very simple. </p></blockquote><p>Paxos有许多变种，一般来说都是指的Basic Paxos，也就是这篇论文里提出来的内容。下面没有特殊说明，都是指的Basic Paxos。</p><p>Paxos需要保证的是两个特性。</p><ol><li><p>safety</p><ul><li>Only a value that has been proposed may be chosen</li><li>Only a single value is chosen, and</li><li>A process never learns that a value has been chosen unless it actually has been.</li></ul></li><li><p>liveness</p><ul><li>Some proposed value is eventually chosen</li><li>If a value is chosen, servers eventually learn about it</li></ul></li></ol><p>Paxos和raft一样也划分了三种角色，但是和raft的不同的是一台机器可以同时扮演这三个角色。</p><ul><li><p>Proposer</p></li><li><p>Acceptor</p></li><li><p>Learner</p></li></ul><a id="more"></a><h4 id="Problems"><a href="#Problems" class="headerlink" title="Problems"></a>Problems</h4><ol><li><p>problem1: split votes</p><p>如果acceptor只接受它收到的一个value。那么在多个机器一起提出proposal时，会发生脑裂，导致没有value被选择。</p><p><img src="http://p7ok3gm01.bkt.clouddn.com/5.png" alt=""></p><p>解决办法：acceptor必须接受多个不同的value</p></li><li><p>problem2: conflict choise </p><p>如果acceptor接受每个它收到的value，会导致选择多个不同的value。</p><p><img src="http://p7ok3gm01.bkt.clouddn.com/6.png" alt=""></p><p>一旦某个value被选择之后，后续的proposal必选选择同个value。同时proposal应该带有unique number，acceptor应该拒绝旧的序号</p><p><img src="http://p7ok3gm01.bkt.clouddn.com/7.png" alt="">proposal返回的时候，若已有value被选择，应该将value返回，proposer需要选择最大的accept_num对于的value来发起accept请求</p><p>解决办法：2-phase protocal，并且通过num来拒绝旧的提案。</p></li><li><p>problem3: livelock</p><p><img src="http://p7ok3gm01.bkt.clouddn.com/4.png" alt="">解决办法： 在重新开始下一轮proposal时，随机设定时间，让其它proposers先完成选择。</p></li></ol><h4 id="Algorithm"><a href="#Algorithm" class="headerlink" title="Algorithm"></a>Algorithm</h4><ol><li>phase1<ul><li>proposer 选择一个proposal number，发送prepare rpc请求给所有acceptors（或者大部分），参数为num</li><li>acceptor在收到proposal req之后会根据num比较，拒绝所有num比已经回复promise小的proposal。同时需要返回已经accept的highest-numbered的value（如果有的话）</li></ul></li><li>phase2<ul><li>proposer收到大多数acceptors的promise之后，开始发送accept request给所有acceptors。参数为proposal   numer 和value。value是highest-numbered proposal among the responses，如果没有acceptors没有返回value的话，则可以任意选择，说明之前没有accept的提案。</li><li>acceptor收到accept request之后，和之前一样比较proposal num，只有比之前promise的num大才会接受</li></ul></li></ol><p>所以acceptor需要持久化 可以允许返回promise的最小proposal number，和accepted proposal number和对应的value。</p><p><img src="http://p7ok3gm01.bkt.clouddn.com/8.png" alt=""></p><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] Paxos made simple</p><p>[2] Implementing Replicated Logs with Paxos. John Ousterhout and Diego Ongaro</p>]]></content>
     
@@ -83,6 +90,8 @@
     
     
       <category term="Distributed System" scheme="http://threezj.com/tags/Distributed-System/"/>
+    
+      <category term="paper reading" scheme="http://threezj.com/tags/paper-reading/"/>
     
   </entry>
   
@@ -220,7 +229,7 @@
     <link href="http://threezj.com/2018/04/28/LFS/"/>
     <id>http://threezj.com/2018/04/28/LFS/</id>
     <published>2018-04-28T12:36:06.000Z</published>
-    <updated>2018-05-03T12:51:16.674Z</updated>
+    <updated>2018-10-14T15:18:02.086Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这两天花了点时间读了下<code>The Design and Implementation of a Log-Structured File System</code>，92年的一篇经典文章。Idea其实很简单，就是利用大内存缓存足够多的内容后，然后一次性顺序的写到磁盘中。LFS的所有写入都是顺序添加。极大提升写效率。思想简单，但是实现比较tricky，有各种细节需要注意，却不复杂，很符合人类直觉。</p><h2 id="位置在变化的inode"><a href="#位置在变化的inode" class="headerlink" title="位置在变化的inode"></a>位置在变化的inode</h2><p>LFS比较关键的一个点，在于inode不是存在一个fix的位置，而是每次写入一个新的块的时候，都会生成新的inode。之所以这样做是因为，传统的文件系统将inode放在fix位置，当添加或者更新块的时候，需要seek到多个位置去查找inode，查找间接块等，物理运动极其耗时。而LFS这样做了之后，只需要顺序接下去写就行了，但如果是添加的话，还需要读取一次旧的inode块，来维护新的inode块。</p><p>但是寻找inode又是一个问题，传统文件中，反正inode数组位置是固定的，只需要位置加上filenumber偏移量就可以了。而在LFS中，存在一个叫imap的数组来索引到最新的inode。也就是说当每次写的时候，在最后总会加上一块imap，来索引最新的inode地址（旧的失效）。到最后整个磁盘中有很多分块的imap。</p><p>但是最后还是需要一块fix的位置来存磁盘中所有最新的imap的地址，即checkpoint region(CR)。比如说放在磁盘最开始的地方。CR肯定是需要磁盘seek过去更新，不过这个更新是周期性的，长时间的，比如30秒。而且所有最新imap，是足够小，可以存在内存的。所以只需要磁盘挂载的时候一次性seek到各个位置读入一次所有的imap即可（所有目的都是为了减少seek）。</p><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180428-174248@2x.png" alt=""></p><p>大概情况如上图。当然还有目录的情况，目录其实也是个文件(保存file name: file number的映射)    ，所以处理其实是和普通文件一样的。<br><a id="more"></a></p><h2 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h2><p>垃圾回收对LFS的性能影响最大的一方面。由于LFS是顺序写的，每次都会产生新的数据块，那么旧的数据块则需要处理掉。处理方式也很简单，比如说一大块连续的磁盘空间(segment)，简单的将一段segment中所有live的数据块，顺序的写出即可，那么原先的segment既可以复用了。这种方式可以尽可能保留大块的连续空间，而是很多的碎片。</p><p>判断数据块是否过期(live)，也是需要处理的问题。论文中提出两种方法，这边讲一种。两种方法都是要在segment中保留一块 <code>segment summary block</code>。<code>segment summary block</code>记录每一个block的file  number和版本号，同时会在imap里保存最新的版本号。每次判断的时候只需要判断版本号有没有过期即可。</p><p>文章中有这么一句话对垃圾回收的性能影响的概括。</p><blockquote><p> Overall, Sprite LFS permits about 65-75% of a disk’s raw bandwidth to be used for writing new data (the rest is used for cleaning). For comparison, Unix systems can only utilize 5-10% of a disk’s raw bandwidth for writing new data; the rest of the time is spent seeking.        </p></blockquote><h2 id="Crash-recovery"><a href="#Crash-recovery" class="headerlink" title="Crash recovery"></a>Crash recovery</h2><p>LFS的恢复也很方便，所有的imap地址都会周期性的更新到CR中，所以恢复的时候只要直接CR中读即可。这里有个问题是有可能在写入CR的时候断电，导致数据不一致。LFS采用了使用两块CR的方式，两块交替着，在写的时候，开头和结尾都会加上时间戳，若没有相匹配的时间戳，说明这块CR数据一致性有问题。则读取另一块。还有一个问题就是，CR更新时间有间隔，所以会损失几秒种的数据，论文中提到可以在log上向前继续扫描恢复数据，因为LFS是只顺序添加的。</p><h2 id="不足之处"><a href="#不足之处" class="headerlink" title="不足之处"></a>不足之处</h2><p>论文中也到了LFS的不足之处，就在随机写一个文件后，会生成很多新的块，相互之间不连续，当需要连续读的时候，将会导致更多的seek。</p><blockquote><p>Even for other workloads, such as those including reads and large-file accesses, Sprite LFS is at least as fast as Unix in all cases but one (files read sequentially after being written randomly).</p></blockquote><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] The Design and Implementation of a Log-Structured File System. SOSP 91’</p><p>[2] Operating Systems: Three Easy Pieces. Chapter: Log-structured File Systems</p>]]></content>
     
@@ -237,6 +246,8 @@
     
     
       <category term="File System" scheme="http://threezj.com/tags/File-System/"/>
+    
+      <category term="paper reading" scheme="http://threezj.com/tags/paper-reading/"/>
     
   </entry>
   
