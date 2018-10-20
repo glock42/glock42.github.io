@@ -70,9 +70,9 @@
 <p>这里限制的条件就是，在c的时候2无法提交！<code>Leader</code>仅仅只能提交当前<code>Term</code>的<code>entry</code>!这样的话如果没提交，即使被覆盖也没什么。如果到e这种情况，s5已经无法获得选票了。</p>
 <p>通过上述两个限制保证<code>Leader</code>选举成功时一定会包含全部已经<code>commit</code>的<code>entry</code>。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>此文大致描述了<code>Raft</code>算法的基本样貌。我觉得理解Raft最重要的还是理解下面五个性质。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2017-06-11%2021-36-40%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/2017-06-11%2021-36-40%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>最后再上一张pass所有test的截图！</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2017-06-11%2021-38-07%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/2017-06-11%2021-38-07%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="https://raft.github.io/raft.pdf" target="_blank" rel="noopener">In Search of an Understandable Consensus Algorithm</a></p>
 </div></article></div></main><footer><div class="paginator"><a href="/2018/04/28/LFS/" class="prev">上一篇</a><a href="/2016/12/30/数据库事务与并发控制/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2017/06/11/Raft 共识算法/';

@@ -8,7 +8,7 @@
 <h4 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h4><p>虽然上述的<code>基地寄存器</code>和<code>界限寄存器</code>可以建立独立地址空间的抽象。但是依然有问题。现在软件越做越大，早就无法装下所有的进程了。当整个进程无法全部装入进程的时候，提出了一种更加灵活的方式，<code>虚拟内存</code>。主要思想是把进程的地址空间切成块，这些块无需全部都装到内存里，而是把一部分必要的装到内存中，而另外一些不是那么重要的装到硬盘中，直到进程需要的时候才调出来使用，大大节省内存空间。其实也是一种抽象，把磁盘的容量抽象成内存。我们用分页来实现<code>虚拟内存</code>。</p>
 <h4 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h4><p><code>分页</code>意味当把进程切块的时候切的比<code>分段</code>要小，每一块则称为<code>页</code>。好现在我们有两个空间。<code>虚拟地址空间</code>以及<code>物理地址空间</code>。我们需要在这中间搭建一个桥梁，把虚拟地址翻译成物理地址，即<code>MMU</code>。<code>MMU</code>则是通过页表来索引得到地址的。</p>
 <p>虚拟地址空间会比物理地址大的多，因为很多页并未分配到物理内存中，而是存在磁盘中，当需要那一页时才会调出来，替换最近使用次数最少的那一页。就好像<code>Cache</code>一样。可以把内存抽象成磁盘的一层<code>Cache</code>，以为读内存的速度比读硬盘的速度快的多。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/virtual-memory%5B1%5D.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/virtual-memory%5B1%5D.png" alt=""></p>
 <h4 id="页表"><a href="#页表" class="headerlink" title="页表"></a>页表</h4><p>那么具体是如何翻译的？用<code>页表(page table)</code>的方式来索引。有点像<code>Hash table</code>。可以把<code>页表</code>看成一个大的数组。每个进程都有一个<code>页表</code>。<code>页表</code>的每一项叫做<code>页表项( page table entries)</code> 。<code>页表项</code>包含20位<code>physical page number (PPN)</code> 和剩下<code>12个标志位</code>来用作权限控制。下面是具体翻译的过程</p>
 <ol>
 <li>得到虚拟地址</li>
@@ -17,7 +17,7 @@
 <li>把<code>页表项的前20位(PPN)</code>加上<code>虚拟地址的后12位(offset)</code>，则得到完整的物理地址。</li>
 </ol>
 <p>实际情况中，我们不可能只用一个表来存储所有的地址。因为页表中的大部分页表项都用不到，因为还未分配。所以采用多级页表的方式来存储。具体看下图，主要方式和上面相同，只不过多加了一层罢了。这样的话，如果<code>页目录</code>中某一项未分配的话，则不需要后面的<code>页表</code>了，大大节省空间。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-14%2016-58-22%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/2016-11-14%2016-58-22%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>以上就是分页实现方式。分页十分简洁明了的实现了操作系统的需求。比如说两个虚拟地址可以指向同一个物理地址，这就是<code>复用和交互</code>。还可以通过标志位来阻止进程访问别的进程，这就是<code>隔离</code>。</p>
 <h2 id="lab2"><a href="#lab2" class="headerlink" title="lab2"></a>lab2</h2><p>前面是<code>lab2</code>所需的所有知识，当然我梳理的不是很细。非常具体的东西，大家还是看书为好。</p>
 <h4 id="Exercise-1"><a href="#Exercise-1" class="headerlink" title="Exercise 1"></a>Exercise 1</h4><blockquote>

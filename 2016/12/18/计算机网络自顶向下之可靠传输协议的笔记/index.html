@@ -26,12 +26,12 @@
 <h4 id="网络层发送数据丢失"><a href="#网络层发送数据丢失" class="headerlink" title="网络层发送数据丢失"></a>网络层发送数据丢失</h4><p>好，新的问题来了。数据包丢失怎么办？按照之前的讨论，发送方会一直等待接收方进行<code>ACK反馈</code>，若数据包丢失，发送方则会一直阻塞。很自然的就想到采用定时器，等待一定时间之后，若发送方没得到反馈，则自动进行重传。但是如何确定等待时间又是个问题。可以确定的是，等待时间一定大于往返时延加上接受端处理数据包的时间。这是个比较复杂的问题，之后再讨论。</p>
 <h4 id="超时处理"><a href="#超时处理" class="headerlink" title="超时处理"></a>超时处理</h4><p>还记得前面提到的，当发送方发送数据之后需要阻塞等待接受确认。这种方式叫做<code>停等协议</code>。可想而知效率很低，几乎大部分的时间都用来等待了。根据<code>计算机网络 自顶向下方法</code>上面的描述，采用<code>停等协议</code>的情况下，发送方只有<code>万分之2.7</code>的时间是在真正工作的！</p>
 <p>之前的方法是一次发送一个数据包，然后进行阻塞等待。现在解决方法是发送多个数据包，然后再进行阻塞等待。注意这里是有本质的区别的。先前都是发一个等一个。现在是发送<code>n</code>个分组，并一起进行等待确认。区别在于发送的数据包的<code>ACK</code>可以在阻塞之前返回，那么则不需要等待之前发送的分组，可以继续向前移动。就好像铺铁路一样，其实并不需要那么长的铁轨，只需要很短一段铁轨就可以让火车绕世界一圈，只要你铺的够快。下面的图更加形象。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-13%2023-20-07%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/2016-12-13%2023-20-07%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>当遇到数据丢失或的情况，有两种方法可以解决。分别是<code>回退N步</code>和<code>选择重传</code></p>
 <h4 id="回退N步"><a href="#回退N步" class="headerlink" title="回退N步"></a>回退N步</h4><p>发送多个分组且不用等待的数量是有限制的，因为考虑到需要<code>流量控制</code>，所以不能无限制的发送。假设发送<code>N</code>个分组，<code>N</code>通常被称为<code>窗口长度</code>。当<code>N</code>个分组中的<code>序号</code>最小的分组被确认之后，才能继续发送，这就是所谓的<code>滑动窗口协议</code>。</p>
 <p>我们先来看接收方是如何处理的。接收方采用<code>累积确认</code>的方式，接收方只接收按序到达的数据包。接收方会把接收到的数据包与上次确认接收的数据包序号进行比对，若序号正好是按序到达的，则发送<code>ACK</code>确认接受，若不按序，则发送最后一次确认接收的<code>ACK</code>，并且丢弃这个包。注意这里虽然都是<code>ACK</code>，但是<code>ACK</code>包中带的<code>序号</code>是不同的。</p>
 <p>发送方需要维护一个滑动窗口<code>[base,N]</code>，我们用<code>nextseq</code>表示下一个可以发送的序号。那么<code>[base, nextseq)</code>表示已经发送但未被确认,<code>[nextseq,N]</code>表示可以发送但是还未发送。<code>base</code>之前的则表示已经发送且确认的。<code>N</code>之后的则表示还不能发送的。若<code>base</code>被确认，则窗口向前移动。<code>回退N步</code>的主要动作在于数据丢失，定时器超时的情况，这个时候会重传所有已经发送但未被确认的<code>数据包</code>。因为上面接收方会把所有未按序到达的数据包丢弃。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-14%2014-30-16%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/2016-12-14%2014-30-16%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <h4 id="选择重传"><a href="#选择重传" class="headerlink" title="选择重传"></a>选择重传</h4><p><code>选择重传</code>解决了<code>回退N步</code>的效率问题，<code>回退N步</code>虽然实现简单，但是效率不高，在某些情况下需要重传大量分组。</p>
 <p><code>选择重传</code>在接收方也维护了滑动窗口来缓存<code>正确到达但是乱序的分组</code>，而不是简单的丢弃。接收方分两种情况，如果是按序到达，则返回<code>ACK</code>确认这个包，并且一起交付与之相连续的之前缓存的数据包，同时滑动窗口向前移动。若未按序到达，则缓存这个<code>数据包</code>，并且返回<code>ACK</code>确认到达。</p>
 <p>在发送方，和之前差不多，但是不会重发之前正确发送但是乱序的分组，而是只发送未确认的分组。</p>
@@ -80,7 +80,7 @@
 </ul>
 <p>到这里不得不谈网上经典的面试题，<code>TCP建立连接为什么需要三次握手？</code>。让我们回到<code>TCP</code>的目的，是为了在不可靠的网络层之上建立可靠的运输协议。那么从这个角度来考虑，如果客户端不确认服务端的允许连接报文会发生什么？假设现在<code>TCP</code>经过服务端允许连接以后，连接就已经建立了。如果现在有一个无效的<code>TCP</code>请求连接发送到服务端，有可能是因为网络阻塞等原因。服务端则会认为这是一个客户端的新的连接请求，因为不需要客户端确认，则直接建立连接，然而这个连接其实是不需要的，白白浪费资源。如果加上第三次，客户端会确认这个请求是失效的，则不会建立连接。</p>
 <h4 id="TCP的数据传输"><a href="#TCP的数据传输" class="headerlink" title="TCP的数据传输"></a>TCP的数据传输</h4><p><code>TCP</code>的可靠数据传输基本原理可以说已经包含在上半部分的介绍当中了。主要是三大原理<code>序号</code>，<code>累计确认</code>和<code>超时重传</code>。但是<code>TCP</code>根据实际情况加入了一些比较有趣的东西，比如<code>快速重传</code>，<code>冗余确认</code>等。</p>
-<h4 id="简化版的TCP传输"><a href="#简化版的TCP传输" class="headerlink" title="简化版的TCP传输"></a>简化版的TCP传输</h4><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-12-14%2023-16-55%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<h4 id="简化版的TCP传输"><a href="#简化版的TCP传输" class="headerlink" title="简化版的TCP传输"></a>简化版的TCP传输</h4><p><img src="http://zhang.nos-eastchina1.126.net/blog/2016-12-14%2023-16-55%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>首先初始化序号位，以及<code>sendBase</code>(也就是第一位未被确认的序号或者说下一个需要发送的序号)。比如说发送<code>seq=1</code>，<code>seq=2</code>,<code>seq=3</code>都未被确认，那么<code>sendBase</code>就为<code>1</code>，然后之后得到一个<code>seq=3</code>的<code>ACK=4</code>，那么则认为<code>seq=1</code>和<code>seq=2</code>都被收到了，则<code>sendBase</code>变为<code>4</code>。避免了重传，原因是接收方采用了<code>累积确认</code>。</p>
 <p>考虑到实际使用中的情况，<code>TCP</code>增加了一些功能。</p>
 <h4 id="超时加倍等待时间"><a href="#超时加倍等待时间" class="headerlink" title="超时加倍等待时间"></a>超时加倍等待时间</h4><p>这种方法其实很好理解，一旦发生超时事件，其实就说明网络拥堵，那么就加倍定时器的等待时间，让<code>TCP</code>发的慢一点以缓解网络拥塞。</p>

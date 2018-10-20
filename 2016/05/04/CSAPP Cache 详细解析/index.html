@@ -1,11 +1,11 @@
 <!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> CSAPP Cache 详细解析 · 一派胡言</title><meta name="description" content="CSAPP Cache 详细解析 - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">CSAPP Cache 详细解析</h1><div class="post-info">2016年5月4日</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>又要来推荐<code>CSAPP</code>这本书啦。很多同学可能写了这么久代码，计算机的基本工作方式都不太懂，看这本书会给你一种融会贯通的感觉，小到二进制位级操作，大到手撸web服务器。</p>
 <p>今天主要整理下<code>Cache</code>的运行机制。</p>
 <h2 id="什么是Cache"><a href="#什么是Cache" class="headerlink" title="什么是Cache"></a>什么是<code>Cache</code></h2><p>编程说到底其实就是对数据的操作。<code>CPU</code>通过各种总线从读取数据，放入<code>ALU(运算器)</code>进行运算，然后再把数据放回主存中。下面是一个简单的示意图。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/QQ%E6%88%AA%E5%9C%9620160503224541.jpg" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/QQ%E6%88%AA%E5%9C%9620160503224541.jpg" alt=""></p>
 <p>很明显。数据运输过程的时间，就是性能的提现。没有数据<code>CPU</code>只能在那里等待.所以为了加快主存到<code>CPU</code>的速度，系统设计者采取了存储设备分层的结构.</p>
 <p><code>Cache</code>又称为<code>高速缓存存储器</code>，是一种非常小非常快的存储器，同时也非常贵，放在<code>CPU</code>和<code>主存</code>之间，相当于中介的存在，每当<code>CPU</code>取数据的时候总是先从<code>Cache</code>中找，如果<code>Cache</code>没有，再到<code>主存</code>找。</p>
 <p><code>CPU</code>和<code>主存</code>直接会放置多个<code>Cache</code>，越靠近<code>CPU</code>则越小越快越贵。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/QQ%E6%88%AA%E5%9C%9620160503230817.jpg" alt=""><br><a id="more"></a></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/QQ%E6%88%AA%E5%9C%9620160503230817.jpg" alt=""><br><a id="more"></a></p>
 <h2 id="局部性"><a href="#局部性" class="headerlink" title="局部性"></a>局部性</h2><p>程序一般使用数据，都倾向于使用地址靠近的数据，或者是最近刚刚使用过的数据。回想下你之前写的程序是不是这样。比如说数组，一整块连续的地址循环访问。不断访问同一个数据去做求和之类的操作。所以分为如下</p>
 <ul>
 <li>时间局部性</li>
@@ -43,7 +43,7 @@
 <li><code>block offset</code>   块偏移量确定数据的位置</li>
 </ul>
 <p>我这么讲可能比较抽象，直接看下图，再对照着看上面的文字，应该比较容易理解。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/QQ%E6%88%AA%E5%9C%9620160503235056.jpg" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/QQ%E6%88%AA%E5%9C%9620160503235056.jpg" alt=""></p>
 <p>所以<code>Cache</code>的查找过程是怎么样的呢？</p>
 <ol>
 <li>根据<code>set index</code>找到属于哪个<code>set</code></li>
@@ -55,7 +55,7 @@
 <h2 id="回写策略"><a href="#回写策略" class="headerlink" title="回写策略"></a>回写策略</h2><p>回写指的是，保持数据一致性，需要写回到主存中，这也很好理解，不回写的话数据就不同步了。</p>
 <ul>
 <li><code>Write-through</code> 直接把数据写回到主存中</li>
-<li><code>Write-back</code>    等知道数据在<code>Cache</code>中要被覆盖了再写回到主存中</li>
+<li><code>Write-back</code>    直到数据在<code>Cache</code>中要被覆盖了再写回到主存中</li>
 </ul>
 <h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>CSAPP<br>CMU 15213<br>维基百科</p>
 </div></article></div></main><footer><div class="paginator"><a href="/2016/06/25/Tomcat 架构探索/" class="prev">上一篇</a><a href="/2016/05/02/最短路径算法总结/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';

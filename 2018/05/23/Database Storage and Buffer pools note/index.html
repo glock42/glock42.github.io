@@ -22,19 +22,19 @@
 </ul>
 <h4 id="Sequential-File"><a href="#Sequential-File" class="headerlink" title="Sequential File"></a>Sequential File</h4><p>所有Tuple是按照某个特定的键（比如主键）排序存放的。在根据特殊键操作表的时候性能会Heap形式要好</p>
 <h4 id="Log-Structred"><a href="#Log-Structred" class="headerlink" title="Log-Structred"></a>Log-Structred</h4><p>不存储tuple，只存储log（即insert，delete，update操作）。当查找的时候，反向搜索，recreate一个tuple。插入快，读慢。一般会考虑额外建立索引来维护log，并定期压缩。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180524-164401.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/WX20180524-164401.png" alt=""></p>
 <h2 id="Database-Page"><a href="#Database-Page" class="headerlink" title="Database Page"></a>Database Page</h2><ul>
 <li>单个文件分成多个page，每个page的大小是固定大小的</li>
 </ul>
 <p>page的存储格式是多样的。为了支持变长的<code>Tuple</code>，一般的存储格式为<code>slotted-page structure</code>如下图。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180524-162444.png" alt=""> </p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/WX20180524-162444.png" alt=""> </p>
 <p>当中间的Tuple被删除的时候，前面的Tuple需要往后移来对齐。这个移动的性能消耗不是太高，因为一般page大小也就4k。若Tuple过大，超过一个page的大小，一般会考虑采用一个额外的overflow page来保存。</p>
 <h2 id="Tuple-layout"><a href="#Tuple-layout" class="headerlink" title="Tuple layout"></a>Tuple layout</h2><p>tuple才是真实的一条记录，即一串二进制序列，由database负责解释。分为两块。</p>
 <ul>
 <li>header：metadata，每个属性的位置和长度，bitmap来快速发现null属性</li>
 <li>data</li>
 </ul>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180524-165218@2x.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/WX20180524-165218@2x.png" alt=""></p>
 <p>目前普遍是按行存的做法，某些情况不是很好，比如应用只需要一行的其中一个数据，但db会将整行都读入，浪费io带宽。也有一些按列存的数据库。比如单个page只存某个属性的数据。</p>
 <h2 id="Different-type-of-the-DBMS-in-different-workloads"><a href="#Different-type-of-the-DBMS-in-different-workloads" class="headerlink" title="Different type of the DBMS in different workloads"></a>Different type of the DBMS in different workloads</h2><ul>
 <li>OLTP: On-line transaction processing 适合简单增删改操作，事务短，操作快的类型</li>

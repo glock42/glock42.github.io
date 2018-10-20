@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> MIT 6.828 lab1 · 一派胡言</title><meta name="description" content="MIT 6.828 lab1 - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">MIT 6.828 lab1</h1><div class="post-info">2016年11月6日</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>开启一场漫长且有趣的旅程，即日起开始学习<code>MIT 6.828</code>。总共有七个<code>lab</code>。<code>lab6</code>和<code>lab7</code>其中选一个做。</p>
 <h2 id="PC启动流程简述"><a href="#PC启动流程简述" class="headerlink" title="PC启动流程简述"></a>PC启动流程简述</h2><p>先了解一下当<code>PC</code>加电后，整个物理地址空间分布。</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-03%2020-55-37%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/2016-11-03%2020-55-37%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>早期的<code>16位</code>计算机是只有<code>1MB</code>的寻址能力。也就是说只能使用<code>0x0000 - 0xffff</code>这么多，如上图所示，<code>640kb</code>以下的部分为早期计算机使用的部分。而上面<code>640kb - 1mb</code>的这些地方则保留下来作为特殊使用，比如视频显示之类的。其中最重要的部分为<code>BIOS( Basic Input/Output System)</code>，<code>BIOS</code>的主要责任为进行一些自检，然后从启动设备中，并载入它的第一扇区到内存的特定位置，即<code>0x7c00</code>，然后跳转到这个位置继续执行。此时，<code>BIOS</code>的工作完成。<code>0x7c00</code> 即是<code>bootloader</code>的入口点。</p>
 <p>当现代计算机突破了<code>1MB</code>内存，达到<code>4GB</code>甚至更多的时候，依然保留了最开始的<code>1M</code>内存空间。所以开始一开始加电以后，是处于实模式的，也就是只有<code>1MB</code>内存可以访问。<code>bootloader</code>会把实模式切换到保护模式。也就是<code>4GB</code>寻址模式。然后再读取<code>kernel</code>到内存中，并且把控制权转给<code>kernel</code>。至此操作系统才算真正的启动起来。</p>
 <p>下面简单总结下启动流程。</p>
@@ -42,7 +42,7 @@
 <p>Examine the 8 words of memory at 0x00100000 at the point the BIOS enters the boot loader, and then again at the point the boot loader enters the kernel. Why are they different? What is there at the second breakpoint? (You do not really need to use QEMU to answer this question. Just think.)</p>
 </blockquote>
 <p>实验结果如下</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-04%2013-38-22%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/2016-11-04%2013-38-22%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>当<code>bootloader</code> 运行之前<code>0x00100000</code>是空，运行完之后，被填充满了。猜想是<code>bootloader</code>把<code>kernel</code>填充到这里来了。查看代码，确实如此。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/* AT(...) gives the load address of this section, which tells</span><br><span class="line">   the boot loader where to load the kernel in physical memory */</span><br><span class="line">.text : AT(0x100000) &#123;</span><br><span class="line">    *(.text .stub .text.* .gnu.linkonce.t.*)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h4 id="Exercise-7"><a href="#Exercise-7" class="headerlink" title="Exercise 7"></a>Exercise 7</h4><blockquote>
@@ -50,7 +50,7 @@
 <p>What is the first instruction <em>after</em> the new mapping is established that would fail to work properly if the mapping weren’t in place? Comment out the <code>movl %eax, %cr0</code> inkern/entry.S, trace into it, and see if you were right.</p>
 </blockquote>
 <p>实验结果如下</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/2016-11-04%2014-10-16%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/2016-11-04%2014-10-16%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
 <p>当运行<code>movl %eax, %cr0</code> 之后， 两个地址都指向了同一个地方也就是<code>0x00100000</code>，说明完成了地址映射。当我们把<code>movl %eax, %cr0</code> 注释掉之后，<code>os</code>启动崩溃，生成错误如下。</p>
 <p><code>qemu: fatal: Trying to execute code outside RAM or ROM at 0xf010002c</code></p>
 <h4 id="Exercise-8"><a href="#Exercise-8" class="headerlink" title="Exercise 8"></a>Exercise 8</h4><blockquote>

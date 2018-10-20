@@ -6,7 +6,7 @@
 <li>Hash Join</li>
 </ul>
 <p>下面以这两张表为例</p>
-<p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180620-212956.png" alt=""></p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/WX20180620-212956.png" alt=""></p>
 <h2 id="Simple-Nested-Loop-Join"><a href="#Simple-Nested-Loop-Join" class="headerlink" title="Simple Nested Loop Join"></a>Simple Nested Loop Join</h2><p>即简单的双重循环。对每一个外层table中的tuple都要scan一遍内层table</p>
 <p><code>Cost: M + (m*N)</code><br><a id="more"></a></p>
 <h2 id="Block-Nested-Loop-Join"><a href="#Block-Nested-Loop-Join" class="headerlink" title="Block Nested Loop Join"></a>Block Nested Loop Join</h2><p>对上面的算法做了简单的优化，从tuple扩大到block。也就是对每一个外层table的block都要scan一遍内层table。减少了一些io次数</p>
@@ -46,7 +46,7 @@
 <li>Partitioning phase 2(M + N)  读一遍，写一遍所以乘2</li>
 <li>Probing Phase: M + N</li>
 </ul>
-<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p><img src="http://7xrsib.com1.z0.glb.clouddn.com/WX20180620-225634.png" alt=""></p>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p><img src="http://zhang.nos-eastchina1.126.net/blog/WX20180620-225634.png" alt=""></p>
 </div></article></div></main><footer><div class="paginator"><a href="/2018/07/05/Database concurrency control note/" class="prev">上一篇</a><a href="/2018/05/23/Database Storage and Buffer pools note/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2018/06/20/Database join algorithm note/';
 var disqus_title = 'Database join algorithm note';
