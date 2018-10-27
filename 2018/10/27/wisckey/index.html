@@ -1,0 +1,45 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 论文笔记 [FAST '16] WiscKey, Separating Keys from Values in SSD-conscious Storage · 一派胡言</title><meta name="description" content="论文笔记 [FAST '16] WiscKey, Separating Keys from Values in SSD-conscious Storage - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">论文笔记 [FAST '16] WiscKey, Separating Keys from Values in SSD-conscious Storage</h1><div class="post-info">2018年10月27日</div><div class="post-content"><p>LSM-Tree的优势在于借鉴LFS的思想，将大块的内存连续的写出到磁盘，减少磁盘seek的时间。同时输出的格式又是连续的，查找的速度也比较快。但是LSM-Tree的结构，也带来了写放大和读放大的问题。这些影响在hdd上是值得的，但是在ssd上并不友好。WiscKey提出了一种面向ssd的，将key和value分开存储的方法。</p>
+<h2 id="Write-and-Read-Amplification"><a href="#Write-and-Read-Amplification" class="headerlink" title="Write and Read Amplification"></a>Write and Read Amplification</h2><p>写放大主要在于compaction的，每次两层之间做compact时，都需要将多个sstable读出做排序（读放大），再写到磁盘。而读放大方面，LSM-Tree需要查找多个数据结构，memtable-&gt;imutable-&gt;level files，假设不存在这个key的，便要把每一层做二分查找搜一遍。特别是第0层，有overlap，需要每个文件都看，虽然有bloom filter，但也影响效率。当value比较大的时候，问题就很明显了，compaction时sstable的读入和写出，都是将key和value一起读一起写的，当value变长时，效率会很低。这些放大的影响在hdd，来换取磁盘seek的消耗还是值得，但是在SSD上就不一样了，SSD随机读写要快的多，并且有并行随机读取的特性可以利用。</p>
+<p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20181027-212041%402x.png" alt=""><br><a id="more"></a></p>
+<h2 id="WiscKey"><a href="#WiscKey" class="headerlink" title="WiscKey"></a>WiscKey</h2><p>key idea就是将key和value分开存储，LSM-Tree里只存key加一个value地址的偏移量，value放到另一个log文件中。之所以可以做是因为，compaction的时候，其实并不需要value的参与，需要排序的只有key而已。idea很简单，但是设计细节还是很复杂。有如下几个问题需要解决。</p>
+<ol>
+<li>因为key和value分开存储，原先read的时候key和value是一起读上的，现在多了一次seek。</li>
+<li>value的log文件怎么样做垃圾回收？</li>
+<li>key和value分开在两个地方写，怎么保证一致性。</li>
+</ol>
+<h4 id="Parallel-Range-Query"><a href="#Parallel-Range-Query" class="headerlink" title="Parallel Range Query"></a>Parallel Range Query</h4><p>WiscKey很好的利用了SSD的特性，当key和value分开存储读取和写入时，可以在后台开启多个线程并行读取value log，但是这里有个不足，是需要value足够大，根据实验数据当value大于4KB时，WiscKey的读性能才能展现出来。</p>
+<h4 id="Garbage-Collection"><a href="#Garbage-Collection" class="headerlink" title="Garbage Collection"></a>Garbage Collection</h4><p>删除key的时候，只是在LSM-Tree删除，并不会涉及到value log，所以需要定期的清除无效的value。这里比较有趣的是，为了方便做垃圾回事和一致性，value log，存的不仅是value，还有key。如下图</p>
+<p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20181027-222137%402x.png" alt=""></p>
+<p>垃圾回收的步骤如下</p>
+<ol>
+<li>从tail开始数据</li>
+<li>检测key是否被删除，或者修改了。（查找LSM-Tree）</li>
+<li>将依然有效的数据顺序添加到head</li>
+<li>free 直接的space</li>
+</ol>
+<p>这个垃圾回收工作不需要实时做，可以离线，效率还是很高的。</p>
+<h4 id="Crash-Consistency"><a href="#Crash-Consistency" class="headerlink" title="Crash Consistency"></a>Crash Consistency</h4><p>WiscKey无论是key丢失，还是value丢失都很好处理。</p>
+<ol>
+<li>若是key丢失了，value还在，就和key被删除的情况一样。</li>
+<li>若是key在，value丢失。因为value log也存了key，只要比较一下key是否相同即可，反之则删除key。</li>
+</ol>
+<p>还有一步可以优化的则是，可以去掉原来的WAL， 因为value log里存了所有可以用来recovery的信息。</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>WiscKey这种key与value分离的设计有如下优点。</p>
+<ul>
+<li>减少写放大和读放大，compaction时只涉及到key，显著减少数据量</li>
+<li>LSM-Tree的层高和sstable的数量会明显减少。树变小还可以更好的利用cache</li>
+</ul>
+<p>但也有不足</p>
+<ul>
+<li>对小value不友好</li>
+</ul>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] WiscKey: Separating Keys from Values in SSD-conscious Storage. FAST ‘16</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2018/10/14/clock/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2018/10/27/wisckey/';
+var disqus_title = '论文笔记 [FAST '16] WiscKey, Separating Keys from Values in SSD-conscious Storage';
+var disqus_url = 'http://threezj.com/2018/10/27/wisckey/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2018 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
