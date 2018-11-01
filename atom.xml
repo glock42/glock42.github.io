@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://threezj.com/"/>
-  <updated>2018-10-27T15:32:02.952Z</updated>
+  <updated>2018-11-01T16:21:53.575Z</updated>
   <id>http://threezj.com/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>论文笔记 [SOSP &#39;17] PebblesDB, Building Key-Value Stores using Fragmented Log-Structured Merge Trees.</title>
+    <link href="http://threezj.com/2018/11/02/pebblesdb/"/>
+    <id>http://threezj.com/2018/11/02/pebblesdb/</id>
+    <published>2018-11-01T16:21:06.000Z</published>
+    <updated>2018-11-01T16:21:53.575Z</updated>
+    
+    <content type="html"><![CDATA[<p>PebblesDB为了减少写放大，同时又不影响读的效率，提出了一种类似于skiplist的方式来建立LSM-Tree，叫做Fragmented Log-Structured Merge Trees (FLSM)。与rocksdb相比，大概减少了2.4-3倍的写放大，以及6.7倍的write throughput。这篇的idea也比较好懂，用分区的方式来减少compaction，但又可以像skiplist那样来检索，读效率也很高。</p><h2 id="Problems"><a href="#Problems" class="headerlink" title="Problems"></a>Problems</h2><p>目前的LSM-Tree存在一个很大的写放大在于，它会对每一层的sstable写多次。在每一次compaction的时候，需要将上下两层有overlap的sstable读到内存，进行排序，然后再输出。但是这个操作是多次的，频繁的。当上一层又满了之后，又需要重复一遍上述操作，第二层overlap的sstable，又被写了一遍。</p><p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20181101-233702%402x.png" alt=""><br><a id="more"></a><br>如上图中level1的sstable被重复写了3次。这就是写放大的问题所在。而LSM很巧妙的解决了这个问题</p><h2 id="Fragmented-Log-Structured-Merge-Trees"><a href="#Fragmented-Log-Structured-Merge-Trees" class="headerlink" title="Fragmented Log-Structured Merge Trees"></a>Fragmented Log-Structured Merge Trees</h2><p>这个名字也很直观。据作者说，本来这篇文章一开始投的是Eurosys，结果被拒了，后来重写了paper，才取了这个名字，写成所谓的数据结构创新，PebblesDB是基于FLSM，然后才被sosp接收了。</p><p>FLSM的思想就是将每一层的sstables划分逻辑上的区域(level0除外)，每个局域内sstable之间是可以重叠的。给这个区域取一个名字叫Guard。同时每个Guard有一个对应的key。假设有两个连续的Guard：G1:k1，G2:k2，那么G1内的sstable的key就在[k1, k2)这个范围内。</p><p>做了这样的划分之后，查找某个key，是先对整个level的Guards进行二分查找，找到某个Guard之后，再查这个Guard里的所有sstable（像level0那样）。是不是和skiplist很像？Guard的划分也是随机的，在插入的时候根据概率来确定是否需要开辟一个新的Guard。并且每一层的概率是不同的，上层稀疏，下层紧密。上一层已经有的Guard，在下一层也必须有。如下图。</p><p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20181101-235755%402x.png" alt=""></p><p>那么FLSM是怎么解决写放大的呢？就在于compaction的时候，每一层的sstable的只需要写一次。上一层的sstable需要合并到下层的时候，只需要将上层的sstable做合并排序，然后根据下层Guard的key做划分，添加到不同的Guard中即可。当然这也有个例外，就是在最后一层的时候，因为没有更下层的Guard来添加，只能合并做重写。过程就如下图</p><p><img src="https://zhang.nos-eastchina1.126.net/blog/guard-compaction.png" alt=""></p><h2 id="EVALUATION"><a href="#EVALUATION" class="headerlink" title="EVALUATION"></a>EVALUATION</h2><p>按照上述的结构，FLSM大量减少了写放大。读的时候需要查找单个Guard内的多个sstable（bloom filter优化），因为PebblesDB增加了单个sstable的大小，效果也不差。但是FLSM也有局限性，即在做range query的时候，读放大会很严重（所有level，每个guard中所有sstable）。但是Guard的数量是可以调整的，调成1的时候就和传统的LSM实现一样了。</p><p>还有一种情况就是在顺序插入的时候，在这种workload下，所有sstable就没有overlap，之前的LSM实现，可以直接将上层的sstable移到下层不需要做IO。而PebblesDB还是要按照下层Guard的key做划分之后写入，增加了IO。下图为测试结果。</p><p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20181102-000707%402x.png" alt=""></p><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] PebblesDB: Building Key-Value Stores using Fragmented Log-Structured Merge Trees. SOSP ‘17</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;PebblesDB为了减少写放大，同时又不影响读的效率，提出了一种类似于skiplist的方式来建立LSM-Tree，叫做Fragmented Log-Structured Merge Trees (FLSM)。与rocksdb相比，大概减少了2.4-3倍的写放大，以及6.7倍的write throughput。这篇的idea也比较好懂，用分区的方式来减少compaction，但又可以像skiplist那样来检索，读效率也很高。&lt;/p&gt;
+&lt;h2 id=&quot;Problems&quot;&gt;&lt;a href=&quot;#Problems&quot; class=&quot;headerlink&quot; title=&quot;Problems&quot;&gt;&lt;/a&gt;Problems&lt;/h2&gt;&lt;p&gt;目前的LSM-Tree存在一个很大的写放大在于，它会对每一层的sstable写多次。在每一次compaction的时候，需要将上下两层有overlap的sstable读到内存，进行排序，然后再输出。但是这个操作是多次的，频繁的。当上一层又满了之后，又需要重复一遍上述操作，第二层overlap的sstable，又被写了一遍。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://zhang.nos-eastchina1.126.net/blog/WX20181101-233702%402x.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+    
+    </summary>
+    
+    
+      <category term="File System" scheme="http://threezj.com/tags/File-System/"/>
+    
+      <category term="paper reading" scheme="http://threezj.com/tags/paper-reading/"/>
+    
+  </entry>
   
   <entry>
     <title>论文笔记 [FAST &#39;16] WiscKey, Separating Keys from Values in SSD-conscious Storage</title>
@@ -578,33 +602,6 @@
       <category term="Java" scheme="http://threezj.com/tags/Java/"/>
     
       <category term="Tomcat" scheme="http://threezj.com/tags/Tomcat/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>CSAPP Cache 详细解析</title>
-    <link href="http://threezj.com/2016/05/04/CSAPP%20Cache%20%E8%AF%A6%E7%BB%86%E8%A7%A3%E6%9E%90/"/>
-    <id>http://threezj.com/2016/05/04/CSAPP Cache 详细解析/</id>
-    <published>2016-05-03T16:13:06.000Z</published>
-    <updated>2018-10-20T16:30:50.667Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>又要来推荐<code>CSAPP</code>这本书啦。很多同学可能写了这么久代码，计算机的基本工作方式都不太懂，看这本书会给你一种融会贯通的感觉，小到二进制位级操作，大到手撸web服务器。</p><p>今天主要整理下<code>Cache</code>的运行机制。</p><h2 id="什么是Cache"><a href="#什么是Cache" class="headerlink" title="什么是Cache"></a>什么是<code>Cache</code></h2><p>编程说到底其实就是对数据的操作。<code>CPU</code>通过各种总线从读取数据，放入<code>ALU(运算器)</code>进行运算，然后再把数据放回主存中。下面是一个简单的示意图。</p><p><img src="http://zhang.nos-eastchina1.126.net/blog/QQ%E6%88%AA%E5%9C%9620160503224541.jpg" alt=""></p><p>很明显。数据运输过程的时间，就是性能的提现。没有数据<code>CPU</code>只能在那里等待.所以为了加快主存到<code>CPU</code>的速度，系统设计者采取了存储设备分层的结构.</p><p><code>Cache</code>又称为<code>高速缓存存储器</code>，是一种非常小非常快的存储器，同时也非常贵，放在<code>CPU</code>和<code>主存</code>之间，相当于中介的存在，每当<code>CPU</code>取数据的时候总是先从<code>Cache</code>中找，如果<code>Cache</code>没有，再到<code>主存</code>找。</p><p><code>CPU</code>和<code>主存</code>直接会放置多个<code>Cache</code>，越靠近<code>CPU</code>则越小越快越贵。</p><p><img src="http://zhang.nos-eastchina1.126.net/blog/QQ%E6%88%AA%E5%9C%9620160503230817.jpg" alt=""><br><a id="more"></a></p><h2 id="局部性"><a href="#局部性" class="headerlink" title="局部性"></a>局部性</h2><p>程序一般使用数据，都倾向于使用地址靠近的数据，或者是最近刚刚使用过的数据。回想下你之前写的程序是不是这样。比如说数组，一整块连续的地址循环访问。不断访问同一个数据去做求和之类的操作。所以分为如下</p><ul><li>时间局部性</li><li>空间局部性</li></ul><h2 id="Cache工作原理"><a href="#Cache工作原理" class="headerlink" title="Cache工作原理"></a>Cache工作原理</h2><p>查找<code>Cache</code>中数据时，找到了称为<code>Hit</code>,没找到则称为<code>Miss</code></p><h4 id="Cache-Miss-Type"><a href="#Cache-Miss-Type" class="headerlink" title="Cache Miss Type"></a>Cache Miss Type</h4><p><code>Miss</code>的情况分为三种</p><ul><li><code>Cold Miss</code>.也就是第一次找的时候，<code>Cache</code>不含数据，当然是<code>Miss</code></li><li><code>Conflict Miss</code>.比较有意思的一种的情况。比如说第一次查找数据<code>0</code>，第一次时不含数据属于<code>Cold Miss</code>，然后就去主存中找，放到<code>Cache</code>中，第二次查找需要数据<code>8</code>，又没有，继续去主存那里找，注意！，<code>8</code>把放到<code>Cache</code>中时覆盖了<code>0</code>，第三次你又需要<code>0</code>了，然后就悲剧了，不断<code>0,8,0,8,0,8,0,8 Miss</code>,当然这里涉及到一个写策略。</li><li><code>Capacity Miss</code>.这种也比较容易理解，就是你需要的数据超过<code>Cache</code>的大小了，当然<code>Miss</code>了</li></ul><h4 id="Cache-Replacement-Policies-Cache替换策略"><a href="#Cache-Replacement-Policies-Cache替换策略" class="headerlink" title="Cache Replacement Policies(Cache替换策略)"></a>Cache Replacement Policies(Cache替换策略)</h4><ul><li><code>Random</code>  随机替换</li><li><code>LRU</code>     <code>Least Recently Used</code>，替换最近最少使用的数据</li><li><code>FIFO</code>    这个应该很熟悉先进先出法。先保存的数据先出去</li></ul><h4 id="Cache-查找原理"><a href="#Cache-查找原理" class="headerlink" title="Cache 查找原理"></a>Cache 查找原理</h4><p>了解查找之前先要知道<code>Cache</code>的组成结构，总共分为两块。</p><ul><li><code>set</code></li><li><code>line</code></li></ul><p>一块Cache，有多个<code>set</code>，一个<code>set</code>有多行<code>line</code>.</p><p><code>set</code>个数取决于你是几位的机器，因为查找数据的时候是根据地址来区分是哪个<code>set</code>的。</p><p><code>line</code>中又分成三块。</p><ul><li><code>valid bit</code>  标志位，标志这块数据是否有效</li><li><code>tag</code>        相当于身份证，只有部分地址和这个<code>tag</code>对上以后，才能继续访问<code>block</code></li><li><code>block</code>      数据真正存放的地方</li></ul><p>那么地址又是如何划分的呢？也是分成三块</p><ul><li><code>tag</code>            对应前面’line’的’tag’</li><li><code>set index</code>      用来查找属于哪个’set’</li><li><code>block offset</code>   块偏移量确定数据的位置</li></ul><p>我这么讲可能比较抽象，直接看下图，再对照着看上面的文字，应该比较容易理解。</p><p><img src="http://zhang.nos-eastchina1.126.net/blog/QQ%E6%88%AA%E5%9C%9620160503235056.jpg" alt=""></p><p>所以<code>Cache</code>的查找过程是怎么样的呢？</p><ol><li>根据<code>set index</code>找到属于哪个<code>set</code></li><li>查找<code>set</code>中的每一行<code>line</code></li><li>先看<code>valid bit</code>是否有效</li><li>接着比对<code>tag</code></li><li>根据<code>block offset</code>获取数据</li></ol><h2 id="回写策略"><a href="#回写策略" class="headerlink" title="回写策略"></a>回写策略</h2><p>回写指的是，保持数据一致性，需要写回到主存中，这也很好理解，不回写的话数据就不同步了。</p><ul><li><code>Write-through</code> 直接把数据写回到主存中</li><li><code>Write-back</code>    直到数据在<code>Cache</code>中要被覆盖了再写回到主存中</li></ul><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>CSAPP<br>CMU 15213<br>维基百科</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;h2 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h2&gt;&lt;p&gt;又要来推荐&lt;code&gt;CSAPP&lt;/code&gt;这本书啦。很多同学可能写了这么久代码，计算机的基本工作方式都不太懂，看这本书会给你一种融会贯通的感觉，小到二进制位级操作，大到手撸web服务器。&lt;/p&gt;
-&lt;p&gt;今天主要整理下&lt;code&gt;Cache&lt;/code&gt;的运行机制。&lt;/p&gt;
-&lt;h2 id=&quot;什么是Cache&quot;&gt;&lt;a href=&quot;#什么是Cache&quot; class=&quot;headerlink&quot; title=&quot;什么是Cache&quot;&gt;&lt;/a&gt;什么是&lt;code&gt;Cache&lt;/code&gt;&lt;/h2&gt;&lt;p&gt;编程说到底其实就是对数据的操作。&lt;code&gt;CPU&lt;/code&gt;通过各种总线从读取数据，放入&lt;code&gt;ALU(运算器)&lt;/code&gt;进行运算，然后再把数据放回主存中。下面是一个简单的示意图。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://zhang.nos-eastchina1.126.net/blog/QQ%E6%88%AA%E5%9C%9620160503224541.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;很明显。数据运输过程的时间，就是性能的提现。没有数据&lt;code&gt;CPU&lt;/code&gt;只能在那里等待.所以为了加快主存到&lt;code&gt;CPU&lt;/code&gt;的速度，系统设计者采取了存储设备分层的结构.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;Cache&lt;/code&gt;又称为&lt;code&gt;高速缓存存储器&lt;/code&gt;，是一种非常小非常快的存储器，同时也非常贵，放在&lt;code&gt;CPU&lt;/code&gt;和&lt;code&gt;主存&lt;/code&gt;之间，相当于中介的存在，每当&lt;code&gt;CPU&lt;/code&gt;取数据的时候总是先从&lt;code&gt;Cache&lt;/code&gt;中找，如果&lt;code&gt;Cache&lt;/code&gt;没有，再到&lt;code&gt;主存&lt;/code&gt;找。&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;CPU&lt;/code&gt;和&lt;code&gt;主存&lt;/code&gt;直接会放置多个&lt;code&gt;Cache&lt;/code&gt;，越靠近&lt;code&gt;CPU&lt;/code&gt;则越小越快越贵。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;http://zhang.nos-eastchina1.126.net/blog/QQ%E6%88%AA%E5%9C%9620160503230817.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;
-    
-    </summary>
-    
-    
-      <category term="Operating system" scheme="http://threezj.com/tags/Operating-system/"/>
     
   </entry>
   
