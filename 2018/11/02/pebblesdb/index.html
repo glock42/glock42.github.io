@@ -11,7 +11,7 @@
 <p>还有一种情况就是在顺序插入的时候，在这种workload下，所有sstable就没有overlap，之前的LSM实现，可以直接将上层的sstable移到下层不需要做IO。而PebblesDB还是要按照下层Guard的key做划分之后写入，增加了IO。下图为测试结果。</p>
 <p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20181102-000707%402x.png" alt=""></p>
 <h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] PebblesDB: Building Key-Value Stores using Fragmented Log-Structured Merge Trees. SOSP ‘17</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2018/10/27/wisckey/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2018/11/12/gfs/" class="prev">上一篇</a><a href="/2018/10/27/wisckey/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2018/11/02/pebblesdb/';
 var disqus_title = '论文笔记 [SOSP '17] PebblesDB, Building Key-Value Stores using Fragmented Log-Structured Merge Trees.';
 var disqus_url = 'http://threezj.com/2018/11/02/pebblesdb/';
