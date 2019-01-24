@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 论文笔记 [SOSP '13] Speedy Transactions in Multicore In-Memory Databases · 一派胡言</title><meta name="description" content="论文笔记 [SOSP '13] Speedy Transactions in Multicore In-Memory Databases - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">论文笔记 [SOSP '13] Speedy Transactions in Multicore In-Memory Databases</h1><div class="post-info">2019年1月24日</div><div class="post-content"><h2 id="Timestamp-Ordering-T-O"><a href="#Timestamp-Ordering-T-O" class="headerlink" title="Timestamp Ordering(T/O)"></a>Timestamp Ordering(T/O)</h2><p>比较广义的分类型的话，总共有两种Concurrency Control Protocol</p>
+<ol>
+<li><p>Two Phase Locking(悲观)</p>
+<p>假设事务会冲突，提前加上锁。会有死锁的可能</p>
+</li>
+<li><p>Timestamp Ordering(乐观)</p>
+<p>假设事务冲突比较少，执行阶段不加锁，在commit阶段才会检查冲突，若冲突则abort</p>
+</li>
+</ol>
+<p>T/O定义的比较广泛，总之就是根据timestamp来确定事务顺序的，都归于T/O，包括basic T/O, Optimistic Concurrency Control(OCC), MVCC都属于T/O。<br><a id="more"></a></p>
+<h2 id="OCC"><a href="#OCC" class="headerlink" title="OCC"></a>OCC</h2><p>这篇文章主要写一下OCC。basic T/O和OCC的区别就是在事务一开始就分配timestamp了，然后根据timestamp来确定顺序，比较简单，好像也没有数据库这么用。</p>
+<p>OCC主要分三个阶段。</p>
+<ul>
+<li><p>Read phase</p>
+<p>事务复制tuple到一个独立的工作空间，执行读写操作。（虽然叫read phase，但依然有写操作，叫excute phase 其实更合理）</p>
+</li>
+<li><p>Validation phase</p>
+<p>从这个阶段开始意味着执行阶段结束，进入commit。dbms需要检查其他所有事务是否和当前事务的改动冲突。一般是所有事务并行检查，最粗暴的做法是一个大锁，一次只能检查一个事务，当然效率也低。分成如下两种检查。</p>
+<ul>
+<li><p>Backward Validation</p>
+<p>检查当前事务的改动是否和目前已提交的事务冲突。（read-after-write）</p>
+</li>
+<li><p>Forward Validation</p>
+<p>检查当前事务的改动是否和当前仍然还在执行中的事务的冲突（write-after-read）</p>
+</li>
+</ul>
+</li>
+<li><p>Write phase</p>
+<p>将当前事务在独立工作空间的改动，写到真正的全局数据库中。</p>
+</li>
+</ul>
+<p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20190124-010557%402x.png" alt=""></p>
+<h4 id="Timestamp-Allocation"><a href="#Timestamp-Allocation" class="headerlink" title="Timestamp Allocation"></a>Timestamp Allocation</h4><p>时间戳分配是OCC的关键。有很多种分配的方式</p>
+<ul>
+<li><p>Mutex</p>
+<p>全局的逻辑时间戳，用锁来递增。性能最差</p>
+</li>
+<li><p>Atomic Addition</p>
+<p>CAS更新时间戳，比较高效，但是多核情况下需要invalid cache line是bottleneck</p>
+</li>
+<li><p>Batched Atomic Addition</p>
+<p>每个线程一次性获取多个时间戳，用完了再用CAS更新全局时间戳。这种方式用的较多，比上一种更高效</p>
+</li>
+<li><p>Hardware Clock/Counter</p>
+<p>cpu硬件上支持，目前未实现</p>
+</li>
+</ul>
+<h2 id="Silo-OCC"><a href="#Silo-OCC" class="headerlink" title="Silo OCC"></a>Silo OCC</h2><p>Silo DBMS是一个单机OLTP数据库，用OCC实现了Serializable隔离级别。Silo的实现基于Masstree，OCC的实现比较有趣的地方在于TID和epoch。</p>
+<p>Silo基于一个全局的number epoch E来分割时间周期，有一个特定的线程去递增E，根据论文的设定是每40ms增加一次。</p>
+<p>TID是一个64 bit的integer，被分成几个部分来表示不同的含义。最高的几个位次代表当前事务提交时的epoch E。中间位次表示基于当前epoch算出来的timestamp。最低的三个bit代表lock bit，lastest-version bit，absent bit。Tid是直接写到tuple里的。</p>
+<h4 id="Commit-Protocol"><a href="#Commit-Protocol" class="headerlink" title="Commit Protocol"></a>Commit Protocol</h4><p>每个事务维护两个独立的私有集合，read-set, write-set。所有在write-set中的tuple也在read-set中。</p>
+<ul>
+<li><p>Phase 1</p>
+<p>将所有在write-set中的tuple，在全局数据库上锁。也就是把这些tuple中tid的lock bit设为1。然后获取当前最新的epoch E。这里需要刷新缓存，保证拿到的是最新的。</p>
+</li>
+<li><p>Phase 2</p>
+<p>遍历read-set中的所有tuple。如遇到如下两种情况，则事务abort。</p>
+<ol>
+<li>全局数据tuple的tid与read-set中的tid不同或latest bit为0。（被其他已经提交的事务修改，Backward Validation）</li>
+<li>locked bit为1且该tuple不属于当前事务的write-set。（被其他正在进行的事务锁定，Forward Validation）</li>
+</ol>
+<p>这里还有一个防止幻读（phantom）的检查是需要检查所有b+tree的叶子节点的version。</p>
+<p>全部检查都过了之后，才会根据epoch，生成新的tid。</p>
+</li>
+<li><p>Phase 3</p>
+<p>将所有write-set的tuple和新生成的tid写入全局数据库。并且unlock tuple。</p>
+</li>
+</ul>
+<p>注意只读事务是不需要修改全局数据库的。具体算法见下图。</p>
+<p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20190124-145612%402x.png" alt=""></p>
+<p>另外生成的tid需要满足如下三个条件。</p>
+<ol>
+<li>大于所有当前事务read-set和write-set中tuple的tid</li>
+<li>大于当前工作线程最近生成的tid</li>
+<li>tid最高位设为当前的epoch</li>
+</ol>
+<p>论文还有很多细节这里略过。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] Speedy Transactions in Multicore In-Memory Databases. SOSP ‘13<br>[2] CMU 15721</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2018/11/12/gfs/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2019/01/24/occ-silo/';
+var disqus_title = '论文笔记 [SOSP '13] Speedy Transactions in Multicore In-Memory Databases';
+var disqus_url = 'http://threezj.com/2019/01/24/occ-silo/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
