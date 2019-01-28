@@ -29,8 +29,7 @@
 <p>另外这篇文章不考虑range scan，没有phantoms，所以下面描述的算法都是serializable isolation。该文主要讨论的是in-memory database, 和disk-based DBMS有很多区别，比如write-lock 是直接内嵌在tuple上的，当有事务修改tuple时，会将该tuple的txn-id设置为事务的tid，相当于上了锁，事务提交后将txn-id设为0。</p>
 <p>下面是一张论文对现有数据库设计的调研结果。</p>
 <p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20190128-220955%402x.png" alt=""><br><a id="more"></a></p>
-<p>####Concurrency Control ptotocol</p>
-<ol>
+<h4 id="Concurrency-Control-ptotocol"><a href="#Concurrency-Control-ptotocol" class="headerlink" title="Concurrency Control ptotocol"></a>Concurrency Control ptotocol</h4><ol>
 <li><p>Timestamp Ordering(MVTO)</p>
 <p>MVTO使用tid来预先定义事务执行的顺序。tuple中额外增加一个read-ts字段，用来保存最后事务读取该tuple的tid。</p>
 <ul>
