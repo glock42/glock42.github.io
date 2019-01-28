@@ -1,4 +1,34 @@
-<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 一派胡言</title><meta name="description" content="我向往安静且自由的生活"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link active">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><ul class="home post-list"><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/01/24/occ-silo/" class="post-title-link">论文笔记 [SOSP '13] Speedy Transactions in Multicore In-Memory Databases</a></h2><div class="post-info">2019年1月24日</div><div class="post-content"><h2 id="Timestamp-Ordering-T-O"><a href="#Timestamp-Ordering-T-O" class="headerlink" title="Timestamp Ordering(T/O)"></a>Timestamp Ordering(T/O)</h2><p>比较广义的分类型的话，总共有两种Concurrency Control Protocol</p>
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 一派胡言</title><meta name="description" content="我向往安静且自由的生活"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link active">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><ul class="home post-list"><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/01/28/mvcc1/" class="post-title-link">论文笔记 [VLDB '17] An Empirical Evaluation of In-Memory Multi-Version Concurrency Control</a></h2><div class="post-info">2019年1月28日</div><div class="post-content"><h2 id="Snapshot-Isolation-SI"><a href="#Snapshot-Isolation-SI" class="headerlink" title="Snapshot Isolation(SI)"></a>Snapshot Isolation(SI)</h2><p>MVCC天生是属于SI隔离级别的。SI表示每个事务开始的时候看到的是一个独立的snapshot，在提交的时候如果write未冲突即成功。在SI下会有write skew的异常情况。</p>
+<p>write skew可以用白球黑球的例子来说明。比如说现在有一堆球，一半是黑的，一半是白的。现在执行两个事务txn1，txn2。</p>
+<ul>
+<li>txn1把黑球变成白球</li>
+<li>txn2把白球变成黑球</li>
+</ul>
+<p>如果是SERIALIZABLE隔离级别的，那就相当于事务顺序执行, 最后的结果肯定是全黑或者全白。但如果是SI，两个事务都看到相同的snapshot，并在这基础上修改，就很有可能出现还是一半黑一半白的情况。</p>
+<p>只要在range scan的情况下会出现write skew, point update不会有这种情况。</p>
+<h2 id="Multi-version-Concurrency-Control-MVCC"><a href="#Multi-version-Concurrency-Control-MVCC" class="headerlink" title="Multi-version Concurrency Control (MVCC)"></a>Multi-version Concurrency Control (MVCC)</h2><p>MVCC是目前最流行事务并发管理的方式。根据字面含义，DBMS会创建多个物理的tuple版本，根据事务版本选择对应的tuple版本返回给当前的事务。MVCC有很多优势，如下。</p>
+<ul>
+<li><p>writer do not block reader.</p>
+<p>需要注意的是，MVCC并不意味只不上锁。比如一个事务t1在写某一个tuple A1，会先对A1上锁，然后生成A2。这个时候假如事务t2要读A1是不行的，只能读A1之前的版本，因为此时t1还没有提交。所以这里的读写互不阻塞指的是事务级别的，写事务不阻塞读事务，不必像2PL那样等到别的事务提交之后才能拿到锁继续执行。</p>
+</li>
+<li><p>Read-only transactions can read a consistent snapshot without acquiring locks.</p>
+<p>consistent指的是所有已提交的事务所做的修改。</p>
+</li>
+<li><p>Easily support time-travel queries.</p>
+<p>很容易追溯过去的版本</p>
+</li>
+</ul>
+<p>一般MVCC的单个tuple含有txn-id(tid), begin-ts, end-ts, pointer这几个字段，不同算法会略有不同。</p>
+<p>MVCC涉及到很多数据库设计方式。比如MVCC需要和别的Concurrency Control ptotocol搭配使用，例如T/O, OCC, 2PL等 。主要有四个关键的设计决策。</p>
+<ul>
+<li>Concurrency Control ptotocol</li>
+<li>Version Storage</li>
+<li>Garbage Collection</li>
+<li>Index Management</li>
+</ul>
+<p>另外这篇文章不考虑range scan，没有phantoms，所以下面描述的算法都是serializable isolation。该文主要讨论的是in-memory database, 和disk-based DBMS有很多区别，比如write-lock 是直接内嵌在tuple上的，当有事务修改tuple时，会将该tuple的txn-id设置为事务的tid，相当于上了锁，事务提交后将txn-id设为0。</p>
+<p>下面是一张论文对现有数据库设计的调研结果。</p>
+<p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20190128-220955%402x.png" alt=""><br></div><a href="/2019/01/28/mvcc1/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/01/24/occ-silo/" class="post-title-link">论文笔记 [SOSP '13] Speedy Transactions in Multicore In-Memory Databases</a></h2><div class="post-info">2019年1月24日</div><div class="post-content"><h2 id="Timestamp-Ordering-T-O"><a href="#Timestamp-Ordering-T-O" class="headerlink" title="Timestamp Ordering(T/O)"></a>Timestamp Ordering(T/O)</h2><p>比较广义的分类型的话，总共有两种Concurrency Control Protocol</p>
 <ol>
 <li><p>Two Phase Locking(悲观)</p>
 <p>假设事务会冲突，提前加上锁。会有死锁的可能</p>
@@ -89,18 +119,4 @@
 <p>下面以这两张表为例</p>
 <p><img src="http://zhang.nos-eastchina1.126.net/blog/WX20180620-212956.png" alt=""></p>
 <h2 id="Simple-Nested-Loop-Join"><a href="#Simple-Nested-Loop-Join" class="headerlink" title="Simple Nested Loop Join"></a>Simple Nested Loop Join</h2><p>即简单的双重循环。对每一个外层table中的tuple都要scan一遍内层table</p>
-<p><code>Cost: M + (m*N)</code><br></div><a href="/2018/06/20/Database join algorithm note/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2018/05/23/Database Storage and Buffer pools note/" class="post-title-link">Database Storage and Buffer pools note</a></h2><div class="post-info">2018年5月23日</div><div class="post-content"><h2 id="Goals-of-the-DBMS"><a href="#Goals-of-the-DBMS" class="headerlink" title="Goals of the DBMS"></a>Goals of the DBMS</h2><ul>
-<li>Allow the DBMS to manage databases that exceed the amount of memory available</li>
-<li>Reading/writing to disk is expensive, so it must be managed carefully</li>
-</ul>
-<p>DBMS总是希望自己来管理所有东西，而不是依靠操作系统</p>
-<h2 id="File-Storage"><a href="#File-Storage" class="headerlink" title="File Storage"></a>File Storage</h2><ul>
-<li>最简单的形式，一张表存储一个文件。但是也有多个关联的表存在一个文件的实现。</li>
-<li>操作系统对于db的文件内容是不关心。</li>
-</ul>
-<p>每个file由多个page组成，有多种不同的方式来存储，</p>
-<ul>
-<li>Heap File</li>
-<li>Sequential File</li>
-<li>Hashing File</li>
-<li>Log-Structured File</div><a href="/2018/05/23/Database Storage and Buffer pools note/" class="read-more">...阅读全文</a></article></li></ul></main><footer><div class="paginator"><a href="/page/2/" class="next">下一页</a></div><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
+<p><code>Cost: M + (m*N)</code><br></div><a href="/2018/06/20/Database join algorithm note/" class="read-more">...阅读全文</a></article></li></ul></main><footer><div class="paginator"><a href="/page/2/" class="next">下一页</a></div><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
