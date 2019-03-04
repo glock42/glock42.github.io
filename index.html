@@ -1,4 +1,25 @@
-<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 一派胡言</title><meta name="description" content="我向往安静且自由的生活"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link active">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><ul class="home post-list"><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/01/28/mvcc1/" class="post-title-link">论文笔记 [VLDB '17] An Empirical Evaluation of In-Memory Multi-Version Concurrency Control</a></h2><div class="post-info">2019年1月28日</div><div class="post-content"><h2 id="Snapshot-Isolation-SI"><a href="#Snapshot-Isolation-SI" class="headerlink" title="Snapshot Isolation(SI)"></a>Snapshot Isolation(SI)</h2><p>MVCC天生是属于SI隔离级别的。SI表示每个事务开始的时候看到的是一个独立的snapshot，在提交的时候如果write未冲突即成功。在SI下会有write skew的异常情况。</p>
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 一派胡言</title><meta name="description" content="我向往安静且自由的生活"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link active">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><ul class="home post-list"><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/03/04/ARIES/" class="post-title-link">ARIES Recovery 算法</a></h2><div class="post-info">2019年3月4日</div><div class="post-content"><h2 id="ARIES"><a href="#ARIES" class="headerlink" title="ARIES"></a>ARIES</h2><p>该算法在1992的时候被提出，几乎所有db都用ARIES来做recovery，或着是它的变种，可见其地位。ARIES的核心思想如下。</p>
+<ul>
+<li><p>Write-Ahead Logging</p>
+<p>在内存中的所有修改，都要以log的形式在data之前刷到磁盘</p>
+</li>
+<li><p>Redo</p>
+<p>重启的时候，对所有已提交的事务做redo</p>
+</li>
+<li><p>undo</p>
+<p>重启的时候，对所有未提交的事务做undo</p>
+</li>
+</ul>
+<p>ARIES的前提是该数据库是STEAL + NO-FORSE。否则事情就简单了，不需要用ARIES这么复杂。</p>
+<ul>
+<li><p>STEAl</p>
+<p>允许未提交的事务将dirty data刷到磁盘</p>
+</li>
+<li><p>NO-FORSE</p>
+<p>在事务提交之前，不强制将所有dirty data刷到磁盘</p>
+</li>
+</ul>
+<p>可见最简单的实现当然是NO-STEAL + FORSE，也就不需要redo和undo了，但是性能低。而且当机器的内存不足以支撑事务所需要的大小时，也不可行。<br></div><a href="/2019/03/04/ARIES/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/01/28/mvcc1/" class="post-title-link">论文笔记 [VLDB '17] An Empirical Evaluation of In-Memory Multi-Version Concurrency Control</a></h2><div class="post-info">2019年1月28日</div><div class="post-content"><h2 id="Snapshot-Isolation-SI"><a href="#Snapshot-Isolation-SI" class="headerlink" title="Snapshot Isolation(SI)"></a>Snapshot Isolation(SI)</h2><p>MVCC天生是属于SI隔离级别的。SI表示每个事务开始的时候看到的是一个独立的snapshot，在提交的时候如果write未冲突即成功。在SI下会有write skew的异常情况。</p>
 <p>write skew可以用白球黑球的例子来说明。比如说现在有一堆球，一半是黑的，一半是白的。现在执行两个事务txn1，txn2。</p>
 <ul>
 <li>txn1把黑球变成白球</li>
@@ -109,14 +130,4 @@
 </ul>
 </li>
 </ol>
-<p>在删除或者插入的情况下，如果节点都满或者都不够的话很有可能整条链上都有锁，一直到leaf节点才会逐级向上释放，并发性比较差，由此引入一种优化的方案。<br></div><a href="/2018/07/05/Database concurrency control note/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2018/06/20/Database join algorithm note/" class="post-title-link">Database join algorithm note</a></h2><div class="post-info">2018年6月20日</div><div class="post-content"><h2 id="Join-algorithm"><a href="#Join-algorithm" class="headerlink" title="Join algorithm"></a>Join algorithm</h2><ul>
-<li>Simple Nested Loop Join</li>
-<li>Block Nested Loop Join</li>
-<li>Index Nested Loop Join</li>
-<li>Sort-Merge Join</li>
-<li>Hash Join</li>
-</ul>
-<p>下面以这两张表为例</p>
-<p><img src="http://zhang.nos-eastchina1.126.net/blog/WX20180620-212956.png" alt=""></p>
-<h2 id="Simple-Nested-Loop-Join"><a href="#Simple-Nested-Loop-Join" class="headerlink" title="Simple Nested Loop Join"></a>Simple Nested Loop Join</h2><p>即简单的双重循环。对每一个外层table中的tuple都要scan一遍内层table</p>
-<p><code>Cost: M + (m*N)</code><br></div><a href="/2018/06/20/Database join algorithm note/" class="read-more">...阅读全文</a></article></li></ul></main><footer><div class="paginator"><a href="/page/2/" class="next">下一页</a></div><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
+<p>在删除或者插入的情况下，如果节点都满或者都不够的话很有可能整条链上都有锁，一直到leaf节点才会逐级向上释放，并发性比较差，由此引入一种优化的方案。<br></div><a href="/2018/07/05/Database concurrency control note/" class="read-more">...阅读全文</a></article></li></ul></main><footer><div class="paginator"><a href="/page/2/" class="next">下一页</a></div><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>

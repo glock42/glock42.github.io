@@ -107,7 +107,7 @@
 </ol>
 <h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><p>最后论文里测出来的结果Version Storage的格式对数据库性能有很大的影响，而不是传统认为的concurrency control protocols。而concurrency control protocols中，MVTO的效果最均衡，但是生产环境中居然没有数据库用这种算法。GC算法表现最好的是transaction-level GC。索引管理方面，logical pointer总是表现的更好。具体的workloads和测试方法可以看论文。</p>
 <h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] An Empirical Evaluation of In-Memory Multi-Version Concurrency Control. VLDB ‘17</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2019/01/24/occ-silo/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2019/03/04/ARIES/" class="prev">上一篇</a><a href="/2019/01/24/occ-silo/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2019/01/28/mvcc1/';
 var disqus_title = '论文笔记 [VLDB '17] An Empirical Evaluation of In-Memory Multi-Version Concurrency Control';
 var disqus_url = 'http://threezj.com/2019/01/28/mvcc1/';
