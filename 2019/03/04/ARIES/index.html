@@ -16,10 +16,10 @@
 <p>允许未提交的事务将dirty data刷到磁盘</p>
 </li>
 <li><p>NO-FORSE</p>
-<p>在事务提交之前，不强制将所有dirty data刷到磁盘</p>
+<p>在事务提交之后，不强制立即将所有dirty data刷到磁盘</p>
 </li>
 </ul>
-<p>可见最简单的实现当然是NO-STEAL + FORSE，也就不需要redo和undo了，但是性能低。而且当机器的内存不足以支撑事务所需要的大小时，也不可行。<br><a id="more"></a></p>
+<p>可见最简单的实现当然是NO-STEAL + FORSE，但是性能低。而且当机器的内存不足以支撑事务所需要的大小时，也不可行。<br><a id="more"></a></p>
 <h2 id="Write-Ahead-Logging"><a href="#Write-Ahead-Logging" class="headerlink" title="Write-Ahead Logging"></a>Write-Ahead Logging</h2><p>如之前所说，为了解决断电以后的一致性问题。在内存中的所有修改，都要以log的形式在data之前刷到磁盘。在事务开始之前写一个<begin> record到log。在事务提交后，写一个<commit> record到log，注意需要保证该事务的所有log在结果返回给应用之前flush到磁盘。若事务中间abort的话，则写一个<abort>record到log。有如下三种log。</abort></commit></begin></p>
 <ul>
 <li>undo log: record中保存旧值，db是STEAL才需要undo。或者用来做abort之后的撤销。</li>
@@ -46,7 +46,7 @@
 <ol>
 <li>写一条<commit>记录</commit></li>
 <li>将log刷到磁盘</li>
-<li>写一条<end>记录。代表这个事务已经正式完成了。但page是否已经刷到磁盘是确定。看到<end>记录即可以对该事务做undo。</end></end></li>
+<li>写一条<end>记录。代表这个事务已经正式完成了。但page是否已经刷到磁盘不确定。看到<end>记录即可以对该事务做redo。</end></end></li>
 </ol>
 </li>
 <li><p>txn abort</p>

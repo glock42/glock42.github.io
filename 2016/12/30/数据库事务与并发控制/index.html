@@ -50,7 +50,7 @@
 <p>另个一个变种是<code>强两阶段封锁</code>在严格的基础上更进一步，约束事务在提交之前不得释放任何锁。</p>
 <p>还有个问题，假如某个数据在之前很长一段时间都是只读的，到最后才需要写，如果按照目前的规则，事务在一开始就要获得对数据的<code>排他锁</code>，但是之前数据是只读的，这样影响了一定的效率。我们采取了<code>锁升级</code>的策略。可以先获得<code>共享锁</code>，直到需要写入时再获取排他锁，大大提高并发效率。</p>
 <h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p><a href="http://db.csail.mit.edu/6.830/lectures/lec12-notes.pdf" target="_blank" rel="noopener">mit 6.830 lec12</a><br>《数据库系统概念》</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2017/06/11/Raft 共识算法/" class="prev">上一篇</a><a href="/2016/12/18/计算机网络自顶向下之可靠传输协议的笔记/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2017/06/11/Raft 共识算法/" class="prev">上一篇</a><a href="/2016/12/07/MIT 6.828 lab5/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2016/12/30/数据库事务与并发控制/';
 var disqus_title = '数据库事务与并发控制';
 var disqus_url = 'http://threezj.com/2016/12/30/数据库事务与并发控制/';

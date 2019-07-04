@@ -16,10 +16,10 @@
 <p>允许未提交的事务将dirty data刷到磁盘</p>
 </li>
 <li><p>NO-FORSE</p>
-<p>在事务提交之前，不强制将所有dirty data刷到磁盘</p>
+<p>在事务提交之后，不强制立即将所有dirty data刷到磁盘</p>
 </li>
 </ul>
-<p>可见最简单的实现当然是NO-STEAL + FORSE，也就不需要redo和undo了，但是性能低。而且当机器的内存不足以支撑事务所需要的大小时，也不可行。<br></div><a href="/2019/03/04/ARIES/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/01/28/mvcc1/" class="post-title-link">论文笔记 [VLDB '17] An Empirical Evaluation of In-Memory Multi-Version Concurrency Control</a></h2><div class="post-info">2019年1月28日</div><div class="post-content"><h2 id="Snapshot-Isolation-SI"><a href="#Snapshot-Isolation-SI" class="headerlink" title="Snapshot Isolation(SI)"></a>Snapshot Isolation(SI)</h2><p>MVCC天生是属于SI隔离级别的。SI表示每个事务开始的时候看到的是一个独立的snapshot，在提交的时候如果write未冲突即成功。在SI下会有write skew的异常情况。</p>
+<p>可见最简单的实现当然是NO-STEAL + FORSE，但是性能低。而且当机器的内存不足以支撑事务所需要的大小时，也不可行。<br></div><a href="/2019/03/04/ARIES/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/01/28/mvcc1/" class="post-title-link">论文笔记 [VLDB '17] An Empirical Evaluation of In-Memory Multi-Version Concurrency Control</a></h2><div class="post-info">2019年1月28日</div><div class="post-content"><h2 id="Snapshot-Isolation-SI"><a href="#Snapshot-Isolation-SI" class="headerlink" title="Snapshot Isolation(SI)"></a>Snapshot Isolation(SI)</h2><p>MVCC天生是属于SI隔离级别的。SI表示每个事务开始的时候看到的是一个独立的snapshot，在提交的时候如果write未冲突即成功。在SI下会有write skew的异常情况。</p>
 <p>write skew可以用白球黑球的例子来说明。比如说现在有一堆球，一半是黑的，一半是白的。现在执行两个事务txn1，txn2。</p>
 <ul>
 <li>txn1把黑球变成白球</li>

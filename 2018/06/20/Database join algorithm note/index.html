@@ -22,7 +22,7 @@
 </ol>
 <p><code>Cost: M + N + (sort cost)</code></p>
 <p>但是要是两张表有很多相同的key，重复的key在merge的时候会变成nested loop join。不过这种情况比较少。</p>
-<p>这个算法比较时候有一张表或者两张都已经有序的情况。</p>
+<p>这个算法比较适用于有一张表或者两张都已经有序的情况。</p>
 <h2 id="Hash-Join"><a href="#Hash-Join" class="headerlink" title="Hash Join"></a>Hash Join</h2><p>分为两种情况。</p>
 <ul>
 <li>basic hash join  整个table可以fit进memory</li>

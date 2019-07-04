@@ -38,7 +38,7 @@
 <p>如果acceptor接受每个它收到的value，会导致选择多个不同的value。</p>
 <p><img src="http://p7ok3gm01.bkt.clouddn.com/6.png" alt=""></p>
 <p>一旦某个value被选择之后，后续的proposal必选选择同个value。同时proposal应该带有unique number，acceptor应该拒绝旧的序号</p>
-<p><img src="http://p7ok3gm01.bkt.clouddn.com/7.png" alt="">proposal返回的时候，若已有value被选择，应该将value返回，proposer需要选择最大的accept_num对于的value来发起accept请求</p>
+<p><img src="http://p7ok3gm01.bkt.clouddn.com/7.png" alt="">proposal返回的时候，若已有value被选择，应该将value返回，proposer需要选择最大的accept_num对应的value来发起accept请求</p>
 <p>解决办法：2-phase protocal，并且通过num来拒绝旧的提案。</p>
 </li>
 <li><p>problem3: livelock</p>
