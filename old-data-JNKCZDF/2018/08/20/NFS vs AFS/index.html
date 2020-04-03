@@ -1,0 +1,32 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> NFS vs AFS · 一派胡言</title><meta name="description" content="NFS vs AFS - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">NFS vs AFS</h1><div class="post-info">2018年8月20日</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>周末读了ostep的两篇文章<a href="http://pages.cs.wisc.edu/~remzi/OSTEP/dist-nfs.pdf" target="_blank" rel="noopener">Sun’s Network File System</a>和<a href="http://pages.cs.wisc.edu/~remzi/OSTEP/dist-afs.pdf" target="_blank" rel="noopener">The Andrew File System</a>，都是讲的分布式文件系统，但是侧重的方向不同，导致相关实现也全然不同，写篇笔记对比一下。</p>
+<h2 id="NFS"><a href="#NFS" class="headerlink" title="NFS"></a>NFS</h2><p>NFS的goal是fast crash recovery and simple，所以它的设计都是为这个目的服务。</p>
+<h4 id="key-design"><a href="#key-design" class="headerlink" title="key design"></a>key design</h4><ul>
+<li><p>stateless  </p>
+<p>server不保存任何有关client的状态。假如crash，不用做任何操作，直接重启即可。这是一个最重要的设计。需要的信息都通过rpc的参数传递过来。</p>
+</li>
+<li><p>idempotent</p>
+<p>接口都做到幂等性，这样做主要是为了处理message lost 或者 server crash这些情况，client只需要retry即可。</p>
+</li>
+<li><p>client-cache</p>
+<p>这主要为性能考虑，但同时为带来一致性问题。NFS通过前先通过getattr request发送给server，查看cache是否过期，一般是周期性的问一下，比如所3s。同时在close的时候将cache刷回server。</p>
+<a id="more"></a>
+</li>
+</ul>
+<h2 id="AFS"><a href="#AFS" class="headerlink" title="AFS"></a>AFS</h2><p>AFS却不同，它的goal为scale。也就是如何让server能支持更多的服务器。为了支持很多的client，要做的就是减少与client 与server的交互，也就减少了server的资源占用(cpu/network)。</p>
+<h4 id="key-design-1"><a href="#key-design-1" class="headerlink" title="key design"></a>key design</h4><ul>
+<li><p>whole-file caching</p>
+<p>client发起fetch请求，拿到整个file后，会写到磁盘里。这很好的解决了cache一致性的问题。这里和NFS不同，NFS其他client是以block为单位获取的，所以不同client之间看到的是混合版错误的文件。AFS同样也是close的时候刷新，server只接收时间最近的修改。</p>
+</li>
+<li><p>callback</p>
+<p>client不会定时请求server询问cache是否过期，而是会在server注册callback，若其他client修改了文件，server会通知client重新获取。这里带来server recovery时的复杂性，重启时server会通知所有client cache失效，重新获取。</p>
+</li>
+</ul>
+</div></article></div></main><footer><div class="paginator"><a href="/2018/09/26/paxos/" class="prev">上一篇</a><a href="/2018/07/05/Database concurrency control note/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2018/08/20/NFS vs AFS/';
+var disqus_title = 'NFS vs AFS';
+var disqus_url = 'http://threezj.com/2018/08/20/NFS vs AFS/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>

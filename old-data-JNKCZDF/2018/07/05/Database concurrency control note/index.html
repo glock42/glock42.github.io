@@ -1,0 +1,47 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> Database concurrency control note · 一派胡言</title><meta name="description" content="Database concurrency control note - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">Database concurrency control note</h1><div class="post-info">2018年7月5日</div><div class="post-content"><h2 id="Locking-in-B-Tree"><a href="#Locking-in-B-Tree" class="headerlink" title="Locking in B+Tree"></a>Locking in B+Tree</h2><p>使用2PL在index上效果会很差，因为每次使用索引时都会lock root，导致其他事务无法访问。Index一般使用<code>Lock crabbing</code>。</p>
+<h4 id="Basic-Lock-Crabbing"><a href="#Basic-Lock-Crabbing" class="headerlink" title="Basic Lock Crabbing"></a>Basic Lock Crabbing</h4><ol>
+<li>search<ul>
+<li>获取parent的S lock</li>
+<li>接着到下一层获取child的S lock</li>
+<li>释放上一层parent的S lock，如此循环。</li>
+</ul>
+</li>
+<li>insert/delete<ul>
+<li>获取parent的X lock</li>
+<li>到下一层，获取child的X lock</li>
+<li>如果安全的话则释放parent的X lock。安全即是指child没有分裂或者合并。也就是说有足够的空间插入，或者足够多的节点删除。不然继续到一层，如此循环。</li>
+</ul>
+</li>
+</ol>
+<p>在删除或者插入的情况下，如果节点都满或者都不够的话很有可能整条链上都有锁，一直到leaf节点才会逐级向上释放，并发性比较差，由此引入一种优化的方案。<br><a id="more"></a></p>
+<h4 id="Optimistic-Lock-Coupling"><a href="#Optimistic-Lock-Coupling" class="headerlink" title="Optimistic Lock Coupling"></a>Optimistic Lock Coupling</h4><p>基本思想就是在插入或者删除的时候和查找一样获取S lock，直到叶子节点时，如果需要分裂或者合并再采用上面的算法重来一遍。也就是先假设合并或者分裂比较少见。若真发生了再上X锁。</p>
+<h2 id="Timestamp-Ordering-Concurrency-Control"><a href="#Timestamp-Ordering-Concurrency-Control" class="headerlink" title="Timestamp Ordering Concurrency Control"></a>Timestamp Ordering Concurrency Control</h2><p>通过时间戳来确定事务的先后顺序而不是采用锁。</p>
+<p>在事务启动前，分配时间戳。若TS(T1)&lt;TS(T2)则DBMS必须确保执行顺序与T1在T2之前的串行调度一样。</p>
+<h4 id="BASIC-T-O"><a href="#BASIC-T-O" class="headerlink" title="BASIC T/O"></a>BASIC T/O</h4><ol>
+<li>Read X<ul>
+<li>如果TS(Ti) &lt; W-TS(X)，则违法了顺序，也就是Ti希望去读在Ti之后的事务写的数据了。这种情况下需要中上事务，或者重启</li>
+<li>若相反，则可以读，并且需要更新R-TS(X) = max(R-TS(X), TS(Ti))。也就是将最大的读事务的timestamp记录下，当写的时候可以用来比较。</li>
+</ul>
+</li>
+<li>Write X<ul>
+<li>若果TS(Ti) &lt; R-TS(X) 或者 TS(Ti) &lt; W-TS(X)，与上面一样，也是违法了顺序。则终止或重启。</li>
+<li>如相反，则允许写，并且更新W-TS(X) = Ti</li>
+</ul>
+</li>
+</ol>
+<p>这里有一种优化方法，也就是时TS(Ti) &lt; W-TS(X)，忽略写，让事务继续。因为反正Ti的write都会之后的事务覆盖。这种方法叫Thomas Write Rule</p>
+<h2 id="Optimistic-Concurrency-Control-OCC"><a href="#Optimistic-Concurrency-Control-OCC" class="headerlink" title="Optimistic Concurrency Control (OCC)"></a>Optimistic Concurrency Control (OCC)</h2><p>与悲观锁相反，假设冲突发生的情况比较少，不加锁，直到冲突发生后，再重试。当每个事务运行的时候都会copy一份内容作为private workspace。事务的所有的操作都在private workspace中，只有等提交时才会写到真正的数据库中。具体的实施如下。</p>
+<ul>
+<li>Read phase：将需要写的那部分数据copy到private workspace</li>
+<li>Validation phase： 当事务提交的事务，检查是否与其他事务冲突。</li>
+<li>Write phase：若无冲突，则将修改的部分写入数据库。反之则终止或重启。</li>
+</ul>
+</div></article></div></main><footer><div class="paginator"><a href="/2018/08/20/NFS vs AFS/" class="prev">上一篇</a><a href="/2018/06/20/Database join algorithm note/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2018/07/05/Database concurrency control note/';
+var disqus_title = 'Database concurrency control note';
+var disqus_url = 'http://threezj.com/2018/07/05/Database concurrency control note/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>

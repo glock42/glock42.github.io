@@ -1,0 +1,39 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 论文笔记 Time, Clocks and the Ordering of Events in a Distributed System · 一派胡言</title><meta name="description" content="论文笔记 Time, Clocks and the Ordering of Events in a Distributed System - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">论文笔记 Time, Clocks and the Ordering of Events in a Distributed System</h1><div class="post-info">2018年10月14日</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在分布式系统中，如何确定两个事件发生的先后顺序是比较困难的。在不同机器上的物理时钟会有会有误差。Lamport在1978的文章<a href="http://research.microsoft.com/users/lamport/pubs/time-clocks.pdf" target="_blank" rel="noopener">Time, Clocks and the Ordering of Events in a Distributed System” (1978)</a>提出了一种Logical Clock 来描述分布式系统中的先后顺序。论文中先是定义了一种偏序的<code>happened before</code> 关系，通过这种关系给出了logical clock的算法，最后用logical clock实现了全序的分布式算法。</p>
+<h2 id="Happened-before"><a href="#Happened-before" class="headerlink" title="Happened-before"></a>Happened-before</h2><p>Lamport提出用事件发生的先后因果关系来描述事件。若事件b依赖于a发生，则<code>a happened-before b</code>。定义如下。</p>
+<ol>
+<li>If a and b are events in the same process, and a comes before b, then a → b.</li>
+<li>If a is the sending of a message by one process and b is the receipt of the same message by another process, then a → b.</li>
+<li>if a→ b and b → c then a→c. </li>
+</ol>
+<p>若相互之间没有依赖关系，可认为是并行的。并发说明这两个事件谁先发生并不重要，这其实逻辑时钟的重要思想。Logical clock只保证你的系统不出错（即不违反相互依赖关系），而不能保证事件发生的真实顺序。<br><a id="more"></a></p>
+<h2 id="Logical-Clock"><a href="#Logical-Clock" class="headerlink" title="Logical Clock"></a>Logical Clock</h2><p>Logical Clock就是给事件打上时间戳（一般实现为递增的序号）。如果a happended before b, 那么a的时间戳就要小于b。时间戳的逻辑遵循下面的规则。</p>
+<ul>
+<li>在同一个进程中，每发生一个事件则时间戳+1</li>
+<li>不同进程中，进程A收到进程B的message, 其中包含B的时间戳为T， 则C(A) = max(T, C(A)) + 1</li>
+</ul>
+<p>若a-&gt;b, 则C(a) &lt; C(b), 但是反过来并不能成立。在并行的情况，时间戳的大小并不能反映事情发生的先后顺序，因为根本不重要。</p>
+<h2 id="Total-Ordering"><a href="#Total-Ordering" class="headerlink" title="Total Ordering"></a>Total Ordering</h2><p>既然并行的情况，事件发生的顺序不重要。为了保证全局的顺序，就强制规定一种顺序，比如说机器编号，机器编号小的时间戳更小。由此，Lamport提出了基于Logical Clock的分布式算法。这个算法基于一个前提，message被一个进程发送给另一个进程，接收到的顺序是按照发出的顺序的。算法如下</p>
+<p>首先，每个进程都维护一个request queue。</p>
+<ol>
+<li>假设进程A发送request message(RQ) 给其他进程，包含暑假戳T_rq在message里面。并且将RQ入队</li>
+<li>当其他进程收到R时，进程将RQ入队，并发送ack给进程A（也要包含时间戳）</li>
+<li>当进程A需要release资源的时候，进程A删除在队列里的RQ message，并发送release message(RL)给其它进程</li>
+<li>当收到RL时，进程删除队列里所有来自进程A的RQ</li>
+</ol>
+<p>进程A只有满足以下条件才能获取资源：</p>
+<ol>
+<li>RQ是队里中的第一个request message，</li>
+<li>进程A收到其它所有进程的message, 其中包含的时间戳&gt;T_rq。</li>
+</ol>
+<p>为什么这个算法可以work？通过上述两个条件，我们保证了所有进程都看到了RQ，并且按照前面的算法，RQ是按照Lamport Clock进行排序的。所有进程看到的都是同一个顺序。</p>
+<p>这个算法也有一定的局限性，即需要所有进程参与，一旦某个进程挂掉了，整个system就不可用了。</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>[1] Time, Clocks and the Ordering of Events in a Distributed System</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2018/10/27/wisckey/" class="prev">上一篇</a><a href="/2018/09/26/paxos/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2018/10/14/clock/';
+var disqus_title = '论文笔记 Time, Clocks and the Ordering of Events in a Distributed System';
+var disqus_url = 'http://threezj.com/2018/10/14/clock/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>

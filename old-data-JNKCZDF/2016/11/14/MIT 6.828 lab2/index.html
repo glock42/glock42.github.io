@@ -1,0 +1,142 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> MIT 6.828 lab2 · 一派胡言</title><meta name="description" content="MIT 6.828 lab2 - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">MIT 6.828 lab2</h1><div class="post-info">2016年11月14日</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这个<code>lab</code>主要是写内存管理相关的代码。实现操作系统必须满足三个要求<code>multiplexing, isolation, and interaction</code> 。翻译成中文就是<code>复用，隔离和相互作用</code>。这三个条件其实主要靠抽象完成。<code>复用</code> 比如<code>IO</code>读写，都对文件描述符进行处理，而不管底下是网络读写还是磁盘读写等。<code>隔离</code>抽象地址空间，每个进程拥有一个自己的地址空间，相互并不影响。<code>相互作用</code>也需要抽象的控制，防止一些恶意的软件。</p>
+<p><code>lab2</code>关注点在于如何实现地址空间。<code>jos</code>通过实现分页管理来实现。操作系统中所有程序接触的地址都是虚拟地址，然后硬件上真正需要的则是物理地址，所以中间则是使用<code>MMU(memory management unit)</code>来把虚拟地址翻译为物理地址。</p>
+<h2 id="连续的内存分配"><a href="#连续的内存分配" class="headerlink" title="连续的内存分配"></a>连续的内存分配</h2><p>早期操作系统都是直接操作物理地址，很明显，这样做有着致命的缺点。比如用户程序可以直接访问<code>kernel</code>地址，导致系统崩溃，多个用户程序程序直接相互影响。即使设立了保护机制，也就是通过一些<code>flag</code>来辨别是否可以访问，但还是会有问题。就是当两个进程同时载入内存时，会进行地址偏移，跳转到指令并不会是程序中原先的指令，此时需要进行<code>重定位</code>，就是扫描一遍程序，给程序中涉及到的地址加上偏移量。但是这种方法效率是很低的。需要为每个需要执行的程序进行扫描判定计算。</p>
+<h4 id="地址空间"><a href="#地址空间" class="headerlink" title="地址空间"></a>地址空间</h4><p>所以这里我们提出了<code>地址空间</code>的概念。重点还是抽象。我门让每个进程处于独立的进程空间中。比如虽然两个进程都指向同一个虚拟地址，但是实际所指的物理地址是不同的。</p>
+<h4 id="基地寄存器和界限寄存器"><a href="#基地寄存器和界限寄存器" class="headerlink" title="基地寄存器和界限寄存器"></a>基地寄存器和界限寄存器</h4><p>其实就是动态重定位。把重定位的时间推迟了，之前的重定位一般发生在加载时，而现在推迟到访问内存时，并且减少了扫描查找的时间。通过两个寄存器来保存进程的起始地址和进程使用空间的长度。当程序访问内存时，自动加上偏移量，如果超出界限，则产生错误。但这种方法还是不够快，需要进行计算，比较可以进行的很快，但计算不行。进行动态重定位之后地址称为<code>线性地址</code><br><a id="more"></a></p>
+<h2 id="非连续的内存分配"><a href="#非连续的内存分配" class="headerlink" title="非连续的内存分配"></a>非连续的内存分配</h2><p>之前的内存分配，都是连续的，但是其实这种分法的内存利用效率很低。会产生很多的<code>内碎片</code>，<code>外碎片</code>，当你找不到足够大内存块时，还需要对内存进行整理。然后就有人提出了不连续的内存分配。把内存切开，分块保存。那么这时候，切多大的块又是一个问题。进而产生了两种方法<code>分段</code>和<code>分页</code>。</p>
+<h4 id="分段"><a href="#分段" class="headerlink" title="分段"></a>分段</h4><p>分段的概念就是说，我们把进程的地址空间分成堆、栈、符号表、代码段等等。分成几个比较大的块，这几个块在物理内存中是可以不连续的。每个进程都有<code>段表</code>，<code>段表是</code>由操作系统建立的。虚拟地址分成两块，<code>段号</code>和<code>偏移量</code>，通过<code>段号</code>索引<code>段表</code>得到<code>基址</code>再加上<code>偏移量</code>，则为物理地址。段是可以动态生长的。</p>
+<h4 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h4><p>虽然上述的<code>基地寄存器</code>和<code>界限寄存器</code>可以建立独立地址空间的抽象。但是依然有问题。现在软件越做越大，早就无法装下所有的进程了。当整个进程无法全部装入进程的时候，提出了一种更加灵活的方式，<code>虚拟内存</code>。主要思想是把进程的地址空间切成块，这些块无需全部都装到内存里，而是把一部分必要的装到内存中，而另外一些不是那么重要的装到硬盘中，直到进程需要的时候才调出来使用，大大节省内存空间。其实也是一种抽象，把磁盘的容量抽象成内存。我们用分页来实现<code>虚拟内存</code>。</p>
+<h4 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h4><p><code>分页</code>意味当把进程切块的时候切的比<code>分段</code>要小，每一块则称为<code>页</code>。好现在我们有两个空间。<code>虚拟地址空间</code>以及<code>物理地址空间</code>。我们需要在这中间搭建一个桥梁，把虚拟地址翻译成物理地址，即<code>MMU</code>。<code>MMU</code>则是通过页表来索引得到地址的。</p>
+<p>虚拟地址空间会比物理地址大的多，因为很多页并未分配到物理内存中，而是存在磁盘中，当需要那一页时才会调出来，替换最近使用次数最少的那一页。就好像<code>Cache</code>一样。可以把内存抽象成磁盘的一层<code>Cache</code>，以为读内存的速度比读硬盘的速度快的多。</p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/virtual-memory%5B1%5D.png" alt=""></p>
+<h4 id="页表"><a href="#页表" class="headerlink" title="页表"></a>页表</h4><p>那么具体是如何翻译的？用<code>页表(page table)</code>的方式来索引。有点像<code>Hash table</code>。可以把<code>页表</code>看成一个大的数组。每个进程都有一个<code>页表</code>。<code>页表</code>的每一项叫做<code>页表项( page table entries)</code> 。<code>页表项</code>包含20位<code>physical page number (PPN)</code> 和剩下<code>12个标志位</code>来用作权限控制。下面是具体翻译的过程</p>
+<ol>
+<li>得到虚拟地址</li>
+<li>截取虚拟地址的前<code>20位</code>作为索引</li>
+<li>通过索引从页表中获取<code>页表项</code></li>
+<li>把<code>页表项的前20位(PPN)</code>加上<code>虚拟地址的后12位(offset)</code>，则得到完整的物理地址。</li>
+</ol>
+<p>实际情况中，我们不可能只用一个表来存储所有的地址。因为页表中的大部分页表项都用不到，因为还未分配。所以采用多级页表的方式来存储。具体看下图，主要方式和上面相同，只不过多加了一层罢了。这样的话，如果<code>页目录</code>中某一项未分配的话，则不需要后面的<code>页表</code>了，大大节省空间。</p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/2016-11-14%2016-58-22%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png" alt=""></p>
+<p>以上就是分页实现方式。分页十分简洁明了的实现了操作系统的需求。比如说两个虚拟地址可以指向同一个物理地址，这就是<code>复用和交互</code>。还可以通过标志位来阻止进程访问别的进程，这就是<code>隔离</code>。</p>
+<h2 id="lab2"><a href="#lab2" class="headerlink" title="lab2"></a>lab2</h2><p>前面是<code>lab2</code>所需的所有知识，当然我梳理的不是很细。非常具体的东西，大家还是看书为好。</p>
+<h4 id="Exercise-1"><a href="#Exercise-1" class="headerlink" title="Exercise 1"></a>Exercise 1</h4><blockquote>
+<p>In the file kern/pmap.c, you must implement code for the following functions (probably in the order given).</p>
+<p><code>boot_alloc()</code><br><code>mem_init()</code> (only up to the call to <code>check_page_free_list(1)</code>)<br><code>page_init()</code><br><code>page_alloc()</code><br><code>page_free()</code></p>
+</blockquote>
+<p><code>boot_alloc()</code>在物理内存上为页目录以及页表的数据结构分配数据，只在<code>mem_init()</code>调用。真正的页面分配是用<code>page_alloc()</code>的。<code>boot_alloc()</code>是从<code>kernel</code>装载的结束位置开始分配的。代码如下。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">result = nextfree;</span><br><span class="line"><span class="keyword">if</span>(n &gt; <span class="number">0</span>)&#123;</span><br><span class="line">    <span class="keyword">if</span> (PADDR(nextfree) + n &gt; (npages + <span class="number">1</span>) * PGSIZE) &#123;</span><br><span class="line">        panic(<span class="string">"out of memory\n"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    nextfree = ROUNDUP((<span class="keyword">char</span> *)nextfree + n, PGSIZE);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> result;</span><br></pre></td></tr></table></figure>
+<p>写这个<code>lab</code>这个之前一定要弄清楚原理，不要什么都不懂就开始写了，这样只会无从下手。其实要写的代码都不难。</p>
+<p><code>mem_init()</code> 望名知意，初始化内存。第一部分主要是分配<code>页目录</code>，以及追踪<code>页表</code>的数据结构。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pages = (struct PageInfo *) boot_alloc(npages * <span class="keyword">sizeof</span>(struct PageInfo));</span><br><span class="line"><span class="built_in">memset</span>(pages, <span class="number">0</span>, npages * <span class="keyword">sizeof</span>(struct PageInfo));</span><br></pre></td></tr></table></figure>
+<p><code>page_init()</code> 按照注释的要求初始化<code>pages</code> 和<code>page_free_list</code>，这里比较要注意的是，这个链表是反向的。<code>pp_link</code>指向的是前一个<code>page</code>。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">page_init</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">size_t</span> i, io_page_i, ext_page_i, free_top;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; npages; i++) &#123;</span><br><span class="line">        pages[i].pp_ref = <span class="number">0</span>;</span><br><span class="line">        pages[i].pp_link = page_free_list;</span><br><span class="line">        page_free_list = &amp;pages[i];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    pages[<span class="number">0</span>].pp_link = <span class="literal">NULL</span>;</span><br><span class="line">    pages[<span class="number">1</span>].pp_link = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    io_page_i = PGNUM(IOPHYSMEM);</span><br><span class="line">    ext_page_i = PGNUM(EXTPHYSMEM);</span><br><span class="line">    free_top = PGNUM(PADDR(boot_alloc(<span class="number">0</span>)));</span><br><span class="line"></span><br><span class="line">    pages[ext_page_i].pp_link = pages[io_page_i].pp_link;</span><br><span class="line">    <span class="keyword">for</span>(i = io_page_i;i &lt; ext_page_i;i++)</span><br><span class="line">        pages[i].pp_link = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    pages[free_top].pp_link = pages[ext_page_i].pp_link;</span><br><span class="line">    <span class="keyword">for</span> (i = ext_page_i; i &lt; free_top; i++)</span><br><span class="line">        pages[i].pp_link = <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>page_alloc()</code> 分配页，这个也很简单。都是链表的基础操作。照着注释做就行了。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">struct PageInfo * <span class="title">page_alloc</span><span class="params">(<span class="keyword">int</span> alloc_flags)</span> </span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> *<span class="title">p</span> = <span class="title">page_free_list</span>;</span></span><br><span class="line">    <span class="keyword">if</span>(p)&#123;</span><br><span class="line">        page_free_list = p-&gt;pp_link;</span><br><span class="line">        p-&gt;pp_link = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="keyword">if</span>(alloc_flags &amp; ALLOC_ZERO)&#123;</span><br><span class="line">            <span class="built_in">memset</span>(page2kva(p), <span class="number">0</span>, PGSIZE);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>page_free()</code> 释放页，把它添加回<code>free_list</code>中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">page_free</span><span class="params">(struct PageInfo *pp)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(pp-&gt;pp_ref != <span class="number">0</span> || pp-&gt;pp_link!=<span class="literal">NULL</span>)&#123;</span><br><span class="line">        panic(<span class="string">"pp-&gt;pp_ref is nonzero or pp-&gt;pp_link is not NULL\n"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    pp-&gt;pp_link = page_free_list;</span><br><span class="line">    page_free_list = pp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Exercise-4"><a href="#Exercise-4" class="headerlink" title="Exercise 4"></a>Exercise 4</h4><blockquote>
+<p>Exercise 4. In the file kern/pmap.c, you must implement code for the following functions.</p>
+<p><code>pgdir_walk()</code><br><code>boot_map_region()</code><br><code>page_lookup()</code><br><code>page_remove()</code><br><code>page_insert()</code></p>
+</blockquote>
+<p><code>pgdir_walk</code> 是个关键函数。这里需要你实现虚拟地址翻译到物理地址的过程，先从<code>页目录</code>中拿到<code>页表</code>的地址，然后再根据<code>页表</code>的索引获得<code>页表项</code>。这里是返回指向<code>页表项</code>的地址。注意这里返回的要是虚拟地址。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pte_t</span> * pgdir_walk(<span class="keyword">pde_t</span> *pgdir, <span class="keyword">const</span> <span class="keyword">void</span> *va, <span class="keyword">int</span> create) &#123;</span><br><span class="line">    <span class="keyword">int</span> pdr_i = PDX(va);</span><br><span class="line">    <span class="keyword">pde_t</span> *pde = &amp;pgdir[pdr_i];</span><br><span class="line">    <span class="keyword">pte_t</span> *pgt;</span><br><span class="line">    <span class="keyword">if</span>(!(*pde &amp; PTE_P))&#123;</span><br><span class="line">        <span class="keyword">if</span>(!create)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> *<span class="title">page</span> = <span class="title">page_alloc</span>(<span class="title">ALLOC_ZERO</span>);</span></span><br><span class="line">        <span class="keyword">if</span>(page == <span class="literal">NULL</span>) <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">        *pde = page2pa(page) | PTE_P | PTE_U | PTE_W;</span><br><span class="line">        page-&gt;pp_ref ++;</span><br><span class="line">    &#125;</span><br><span class="line">    pgt = KADDR(PTE_ADDR(*pde));</span><br><span class="line">    <span class="keyword">return</span> &amp;pgt[PTX(va)];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>boot_map_region</code>这个函数无非就是映射的过程了，并设置权限。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">boot_map_region</span><span class="params">(<span class="keyword">pde_t</span> *pgdir, <span class="keyword">uintptr_t</span> va, <span class="keyword">size_t</span> size, <span class="keyword">physaddr_t</span> pa, <span class="keyword">int</span> perm)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; (size / PGSIZE); i++, va += PGSIZE, pa+=PGSIZE)&#123;</span><br><span class="line">        <span class="keyword">pte_t</span>* pte = pgdir_walk(pgdir,(<span class="keyword">const</span> <span class="keyword">void</span> *) va, <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">if</span>(pte!=<span class="literal">NULL</span>)&#123;</span><br><span class="line">            *pte = pa|perm|PTE_P;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>page_lookup</code> 查找虚拟地址所对应的页</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">struct PageInfo * <span class="title">page_lookup</span><span class="params">(<span class="keyword">pde_t</span> *pgdir, <span class="keyword">void</span> *va, <span class="keyword">pte_t</span> **pte_store)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">pte_t</span> *pte = pgdir_walk(pgdir, va, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(pte == <span class="literal">NULL</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(pte_store!=<span class="literal">NULL</span>)  </span><br><span class="line">            *pte_store = pte;</span><br><span class="line">        <span class="keyword">return</span> pa2page(PTE_ADDR(*pte));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>page_remove</code> 删除对页的分配。<code>TLB</code>是<code>页表</code>之上又加了一层<code>cache</code>，所以这里也要删除记录</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">page_remove</span><span class="params">(<span class="keyword">pde_t</span> *pgdir, <span class="keyword">void</span> *va)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">pte_t</span> *pte;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">PageInfo</span> *<span class="title">pp</span> = <span class="title">page_lookup</span>(<span class="title">pgdir</span>, <span class="title">va</span>, &amp;<span class="title">pte</span>);</span></span><br><span class="line">    <span class="keyword">if</span>(pp!=<span class="literal">NULL</span>)&#123;</span><br><span class="line">        page_decref(pp);</span><br><span class="line">        *pte = <span class="number">0</span>;</span><br><span class="line">        tlb_invalidate(pgdir, va);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>page_insert</code>分配页，若<code>页表</code>中已有数据，则需要删除。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">page_insert</span><span class="params">(<span class="keyword">pde_t</span> *pgdir, struct PageInfo *pp, <span class="keyword">void</span> *va, <span class="keyword">int</span> perm)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">pte_t</span> *pte = pgdir_walk(pgdir, va, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span>(pte)&#123;</span><br><span class="line">        pp-&gt;pp_ref ++;</span><br><span class="line">        <span class="keyword">if</span>(PTE_ADDR(*pte))</span><br><span class="line">            page_remove(pgdir, va);</span><br><span class="line">        *pte = page2pa(pp) | perm |PTE_P;</span><br><span class="line">        tlb_invalidate(pgdir, va);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> -E_NO_MEM;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Exercise-5"><a href="#Exercise-5" class="headerlink" title="Exercise 5"></a>Exercise 5</h4><p><strong>不保证答案的正确性</strong></p>
+<blockquote>
+<p>Fill in the missing code in <code>mem_init()</code> after the call to <code>check_page()</code>.</p>
+</blockquote>
+<p>这个比较简单，按照注释说的来就行。用之前的<code>boot_map_region</code>来建立虚拟地址到物理地址的映射。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">boot_map_region(kern_pgdir, UPAGES, PTSIZE, PADDR(pages), PTE_U);</span><br><span class="line">boot_map_region(kern_pgdir, KSTACKTOP-KSTKSIZE, KSTKSIZE, PADDR(bootstack), PTE_W);</span><br><span class="line">boot_map_region(kern_pgdir, KERNBASE, <span class="number">0xffffffff</span> - KERNBASE, <span class="number">0</span>, PTE_W);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>What entries (rows) in the page directory have been filled in at this point? What addresses do they map and where do they point? In other words, fill out this table as much as possible:</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Entry</th>
+<th style="text-align:center">Base Virtual Address</th>
+<th style="text-align:left">Points to (logically):</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1023</td>
+<td style="text-align:center">0xFFC00000</td>
+<td style="text-align:left">phys memory</td>
+</tr>
+<tr>
+<td style="text-align:center">.</td>
+<td style="text-align:center">?</td>
+<td style="text-align:left">?</td>
+</tr>
+<tr>
+<td style="text-align:center">960</td>
+<td style="text-align:center">0xF0000000</td>
+<td style="text-align:left">phys memory</td>
+</tr>
+<tr>
+<td style="text-align:center">959</td>
+<td style="text-align:center">0xEFC00000</td>
+<td style="text-align:left">Kernel Stack</td>
+</tr>
+<tr>
+<td style="text-align:center">958</td>
+<td style="text-align:center">0xEF800000</td>
+<td style="text-align:left">Memory-mapped I/O</td>
+</tr>
+<tr>
+<td style="text-align:center">957</td>
+<td style="text-align:center">0xEF400000</td>
+<td style="text-align:left">page table</td>
+</tr>
+<tr>
+<td style="text-align:center">956</td>
+<td style="text-align:center">0xEF000000</td>
+<td style="text-align:left">page structures</td>
+</tr>
+<tr>
+<td style="text-align:center">.</td>
+<td style="text-align:center">?</td>
+<td style="text-align:left">?</td>
+</tr>
+<tr>
+<td style="text-align:center">0</td>
+<td style="text-align:center">0x00000000</td>
+<td style="text-align:left">[see next question]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>We have placed the kernel and user environment in the same address space. Why will user programs not be able to read or write the kernel’s memory? What specific mechanisms protect the kernel memory?</p>
+</blockquote>
+<p><code>页目录项</code>以及<code>页表项</code>，都有保留相应的<code>标志位</code>来确定此地址的权限。</p>
+<blockquote>
+<p>What is the maximum amount of physical memory that this operating system can support? Why?</p>
+</blockquote>
+<p>每个<code>PageInfo</code> 对应一个物理页也就是<code>2^12(4096)</code>字节。根据上面的映射，我们把所有<code>pages</code>放到到<code>UPAGES</code>之上，大小为<code>PTSIZE</code>。那么最大的可以支持的物理内存为<code>(PTSIZE/sizeof(PageInfo))*4096</code></p>
+<blockquote>
+<p>How much space overhead is there for managing memory, if we actually had the maximum amount of physical memory? How is this overhead broken down?</p>
+</blockquote>
+<p><code>页目录</code>4M，<code>页表</code>4M，<code>PageInfo</code> 4M ，总共12M。注意这里虽然<code>页目录</code>和<code>PageInfo</code>都不到4M，但操作系统还是预留了这么多。</p>
+<blockquote>
+<p>Revisit the page table setup in kern/entry.S and kern/entrypgdir.c. Immediately after we turn on paging, EIP is still a low number (a little over 1MB). At what point do we transition to running at an EIP above KERNBASE? What makes it possible for us to continue executing at a low EIP between when we enable paging and when we begin running at an EIP above KERNBASE? Why is this transition necessary?</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mov $relocated, %eax</span><br><span class="line">jmp *%eax</span><br></pre></td></tr></table></figure>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><p>《现代操作系统》<br>清华大学操作系统课</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2016/11/22/MIT 6.828 lab3/" class="prev">上一篇</a><a href="/2016/11/06/MIT 6.828 lab1/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2016/11/14/MIT 6.828 lab2/';
+var disqus_title = 'MIT 6.828 lab2';
+var disqus_url = 'http://threezj.com/2016/11/14/MIT 6.828 lab2/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>

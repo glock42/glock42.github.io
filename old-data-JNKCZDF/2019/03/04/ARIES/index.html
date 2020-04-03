@@ -1,0 +1,133 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> ARIES Recovery 算法 · 一派胡言</title><meta name="description" content="ARIES Recovery 算法 - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">ARIES Recovery 算法</h1><div class="post-info">2019年3月4日</div><div class="post-content"><h2 id="ARIES"><a href="#ARIES" class="headerlink" title="ARIES"></a>ARIES</h2><p>该算法在1992的时候被提出，几乎所有db都用ARIES来做recovery，或着是它的变种，可见其地位。ARIES的核心思想如下。</p>
+<ul>
+<li><p>Write-Ahead Logging</p>
+<p>在内存中的所有修改，都要以log的形式在data之前刷到磁盘</p>
+</li>
+<li><p>Redo</p>
+<p>重启的时候，对所有已提交的事务做redo</p>
+</li>
+<li><p>undo</p>
+<p>重启的时候，对所有未提交的事务做undo</p>
+</li>
+</ul>
+<p>ARIES的前提是该数据库是STEAL + NO-FORSE。否则事情就简单了，不需要用ARIES这么复杂。</p>
+<ul>
+<li><p>STEAl</p>
+<p>允许未提交的事务将dirty data刷到磁盘</p>
+</li>
+<li><p>NO-FORSE</p>
+<p>在事务提交之后，不强制立即将所有dirty data刷到磁盘</p>
+</li>
+</ul>
+<p>可见最简单的实现当然是NO-STEAL + FORSE，但是性能低。而且当机器的内存不足以支撑事务所需要的大小时，也不可行。<br><a id="more"></a></p>
+<h2 id="Write-Ahead-Logging"><a href="#Write-Ahead-Logging" class="headerlink" title="Write-Ahead Logging"></a>Write-Ahead Logging</h2><p>如之前所说，为了解决断电以后的一致性问题。在内存中的所有修改，都要以log的形式在data之前刷到磁盘。在事务开始之前写一个<begin> record到log。在事务提交后，写一个<commit> record到log，注意需要保证该事务的所有log在结果返回给应用之前flush到磁盘。若事务中间abort的话，则写一个<abort>record到log。有如下三种log。</abort></commit></begin></p>
+<ul>
+<li>undo log: record中保存旧值，db是STEAL才需要undo。或者用来做abort之后的撤销。</li>
+<li>redo  log: record中保存新值，db是NO-FORSE才需要redo</li>
+<li>undo-redo log (ARIES属于这一种)</li>
+</ul>
+<p>最简单的一条log的记录为&lt;txn_id, object_id, before value, after value&gt;。当然现实比这复杂多了。</p>
+<h4 id="Log-Sequence-Number"><a href="#Log-Sequence-Number" class="headerlink" title="Log Sequence Number"></a>Log Sequence Number</h4><p>为了更方便的追踪，现在每一条log record都会有一个对应的全局逻辑序号LSN。整个DB各个地方都会用到。</p>
+<ul>
+<li>flushedLSN，存在memory。表示磁盘上最新的log record的LSN。</li>
+<li>pageLSN，内嵌在page里。代表最新的对这个page update的log LSN。（每次对page update都要更新）</li>
+<li>recLSN ， 也是内嵌在page里。与pageLSN相反，代表最旧的对这个page update的log LSN。（只更新一次）</li>
+<li>lastLSN，存在memory，每个事务都会维护。该事务最新的一个操作记录的LSN。</li>
+<li>MasterRecord，存在disk。指向最新的一个checkpoint。</li>
+</ul>
+<p>只有当flushLSN &gt;= pageLSN时，相关的page才能刷到磁盘。表示对这个page所做的所有log都已经落盘了。</p>
+<h4 id="Transaction-Operation"><a href="#Transaction-Operation" class="headerlink" title="Transaction Operation"></a>Transaction Operation</h4><ul>
+<li><p>txn start</p>
+<ol>
+<li>写一条<start>记录</start></li>
+</ol>
+</li>
+<li><p>txn commit</p>
+<ol>
+<li>写一条<commit>记录</commit></li>
+<li>将log刷到磁盘</li>
+<li>写一条<end>记录。代表这个事务已经正式完成了。但page是否已经刷到磁盘不确定。看到<end>记录即可以对该事务做redo。</end></end></li>
+</ol>
+</li>
+<li><p>txn abort</p>
+<ol>
+<li>写一条<abort>记录。</abort></li>
+<li>反向扫描log，对该事务做undo。可以用prevLSN加速。注意的是对每次更新都需要在log里写一条CLR。防止在undo的db崩溃。</li>
+<li>结束后写一条<end>记录</end></li>
+</ol>
+<p>Compensation Log Record(CLR)的格式与普通log一样，除了多加一条undo_next_lsn。</p>
+</li>
+</ul>
+<p>下面是一次abort的示意图。</p>
+<p><img src="https://zhang.nos-eastchina1.126.net/blog/aries.png" alt=""></p>
+<h2 id="Checkpoint"><a href="#Checkpoint" class="headerlink" title="Checkpoint"></a>Checkpoint</h2><p>WAL有一个显著的问题，随着系统运行时间越长，log会变得越来越长，导致每次crash之后，dbms需要对整个log进行恢复操作。所以dbms定期会做checkpoint，将当前在内存中的数据全部刷到磁盘，则下次恢复只需从最新的checkpoint开始即可。</p>
+<h4 id="Blocking-Checkpoint"><a href="#Blocking-Checkpoint" class="headerlink" title="Blocking Checkpoint"></a>Blocking Checkpoint</h4><p>最Basic的版本，也是性能最差的版本</p>
+<ul>
+<li>停止接受开启新的事务。并等待还在运行中的事务结束。</li>
+<li>flush所有log和dirty page</li>
+<li>写一条<checkpoint>记录到log</checkpoint></li>
+</ul>
+<h4 id="Fuzzy-Checkpoint"><a href="#Fuzzy-Checkpoint" class="headerlink" title="Fuzzy Checkpoint"></a>Fuzzy Checkpoint</h4><p>ARIES中使用的版本。允许接受新的事务，并且不需要等待还在运行中的事务结束。</p>
+<p>为了达到这两个目的，需要维护两张表来保证。</p>
+<ul>
+<li><p>Active Transaction Table (ATT)</p>
+<ol>
+<li>txn_id: 当前正在运行的事务</li>
+<li>status：事务的状态（Running，Committing，Undo candidate）</li>
+<li>lastLSN: 事务最新一次update的LSN</li>
+</ol>
+<p>ARIES需要对ATT做undo</p>
+</li>
+<li><p>Dirty Page Table (DPT)</p>
+<ol>
+<li>所有未提交事务的dirty page。</li>
+<li>page中包含一个recLSN：第一次让该page变dirty的LSN</li>
+</ol>
+<p>ARIES需要对DPT做redo</p>
+</li>
+</ul>
+<p>Fuzzy Checkpoint有两条log record需要添加。</p>
+<ol>
+<li><checkpoint-begin></checkpoint-begin></li>
+<li><checkpoint-end>：需要包含ATT和DPT。ARIES需要根据这两个信息做恢复。</checkpoint-end></li>
+</ol>
+<h2 id="ARIES-1"><a href="#ARIES-1" class="headerlink" title="ARIES"></a>ARIES</h2><p>ARIES总共做如下三个步骤</p>
+<ol>
+<li><p>Analysis</p>
+<p>从最新一个checkpoint开始，从前往后读，确定ATT和DPT。</p>
+<ul>
+<li>根据MasterRecord找到最新的一个Checkpoint</li>
+<li>如果发现TXN-END，将该事务从ATT中删去。（该事务的所有log都刷到磁盘，不需要undo该事务）</li>
+<li>将其他record中事务加到ATT</li>
+<li>如果是update record。若当前page不在DPT，则加到DPT中，并将recLSN设为LSN（只更新这一次）。</li>
+</ul>
+</li>
+<li><p>Redo</p>
+<p>从某个指定位置（DPT中最小的recLSN）开始，从前往后扫描，对已提交的事务（NO-FORSE， DPT）进行redo。</p>
+<ul>
+<li>从DPT找到一个最小的recLSN。（最远的一条记录使DPT中某个page dirty）</li>
+<li>从该位置往前扫描，对每条update record或者CLR，进行redo，除非满足下面其中一个条件可跳过：<ol>
+<li>该page不在DPT中。</li>
+<li>该page在DPT中，但是这条update record的LSN比该page的recLSN大。（说明使该page变dirty的record还没出现，在recLSN之前的数据都已经落盘了）</li>
+<li>该page的pageLSN大于当前record的LSN。（该page是从disk中读上来的，说明pageLSN之前的操作都已经落盘了，不需要在redo）</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>Undo</p>
+<p>从后往前扫描，对未提交的事务（STEAL, ATT）进行undo</p>
+<ul>
+<li>将所有ATT中标志状态为U的事务做undo</li>
+<li>从后往前扫描，每次更新也需要写CLR。</li>
+</ul>
+</li>
+</ol>
+</div></article></div></main><footer><div class="paginator"><a href="/2019/01/28/mvcc1/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2019/03/04/ARIES/';
+var disqus_title = 'ARIES Recovery 算法';
+var disqus_url = 'http://threezj.com/2019/03/04/ARIES/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>

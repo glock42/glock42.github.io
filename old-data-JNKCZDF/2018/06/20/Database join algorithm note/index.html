@@ -1,0 +1,58 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> Database join algorithm note · 一派胡言</title><meta name="description" content="Database join algorithm note - Jian Zhang"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">Database join algorithm note</h1><div class="post-info">2018年6月20日</div><div class="post-content"><h2 id="Join-algorithm"><a href="#Join-algorithm" class="headerlink" title="Join algorithm"></a>Join algorithm</h2><ul>
+<li>Simple Nested Loop Join</li>
+<li>Block Nested Loop Join</li>
+<li>Index Nested Loop Join</li>
+<li>Sort-Merge Join</li>
+<li>Hash Join</li>
+</ul>
+<p>下面以这两张表为例</p>
+<p><img src="http://zhang.nos-eastchina1.126.net/blog/WX20180620-212956.png" alt=""></p>
+<h2 id="Simple-Nested-Loop-Join"><a href="#Simple-Nested-Loop-Join" class="headerlink" title="Simple Nested Loop Join"></a>Simple Nested Loop Join</h2><p>即简单的双重循环。对每一个外层table中的tuple都要scan一遍内层table</p>
+<p><code>Cost: M + (m*N)</code><br><a id="more"></a></p>
+<h2 id="Block-Nested-Loop-Join"><a href="#Block-Nested-Loop-Join" class="headerlink" title="Block Nested Loop Join"></a>Block Nested Loop Join</h2><p>对上面的算法做了简单的优化，从tuple扩大到block。也就是对每一个外层table的block都要scan一遍内层table。减少了一些io次数</p>
+<p><code>Cost: M + (M·N)</code></p>
+<p>若memory比较大，其实可以先一次性将B-2个block都读进来，剩下两个block，一个用来scan内层表，另一个用来join。这样又大幅减少io。</p>
+<h2 id="Index-Nested-Loop-Join"><a href="#Index-Nested-Loop-Join" class="headerlink" title="Index Nested Loop Join"></a>Index Nested Loop Join</h2><p>同样是nested loop的优化，上面两个算法，在做内循环的时候都是通过顺序scan来查找match。如果有index的话，可以直接通过index来查找。</p>
+<p><code>Cost: M + (m·C)</code> </p>
+<p>C代表index查找的代价。</p>
+<h2 id="Sort-Merge-Join"><a href="#Sort-Merge-Join" class="headerlink" title="Sort-Merge Join"></a>Sort-Merge Join</h2><p>这个算法核心思想和归并排序类似。分两步，先排序再合并。</p>
+<ol>
+<li>根据join的key对两个表排序（sort phase）</li>
+<li>通过两个指针索引两张表，都只扫一遍，遇到相同的key则输出，算法类似归并排序的归并阶段（merge phase）</li>
+</ol>
+<p><code>Cost: M + N + (sort cost)</code></p>
+<p>但是要是两张表有很多相同的key，重复的key在merge的时候会变成nested loop join。不过这种情况比较少。</p>
+<p>这个算法比较适用于有一张表或者两张都已经有序的情况。</p>
+<h2 id="Hash-Join"><a href="#Hash-Join" class="headerlink" title="Hash Join"></a>Hash Join</h2><p>分为两种情况。</p>
+<ul>
+<li>basic hash join  整个table可以fit进memory</li>
+<li>Grace Hash Join 内存不够，table不能fit进memory</li>
+</ul>
+<p>hash join 只能在等值join的情况下使用</p>
+<h3 id="basic-hash-join"><a href="#basic-hash-join" class="headerlink" title="basic hash join"></a>basic hash join</h3><p>核心思想也较为简单，就是通过对两张表hash以后，比较相同值的tuple进行连接。</p>
+<ol>
+<li>先使用一个较小的表，扫描一遍，建立hash table （build phase）</li>
+<li>扫描另一个表，使用相同的hash函数，定位到相同的bucket，进行match比较 （probe phase）</li>
+</ol>
+<p>注意若hash冲突过于严重，就又变成nested loop join了</p>
+<h4 id="Grace-Hash-Join"><a href="#Grace-Hash-Join" class="headerlink" title="Grace Hash Join"></a>Grace Hash Join</h4><p>当memory不够大时，则需要将table分片，分到足够小能塞进内存，再在内存中使用basic hash join或者其他join算法。</p>
+<ol>
+<li>采用同一个hash函数，对两张表进行hash计算且分片输出 （build phase）</li>
+<li>对于相应分片的内容，已经可以fit入内存，即可直接用上述的join算法进行输出 (probe phase)</li>
+</ol>
+<p>若单个分片还是不能塞入内存，可以递归的换一个hash函数继续分片。</p>
+<p><code>Cost of hash join is 3(M + N)</code></p>
+<ul>
+<li>Partitioning phase 2(M + N)  读一遍，写一遍所以乘2</li>
+<li>Probing Phase: M + N</li>
+</ul>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p><img src="http://zhang.nos-eastchina1.126.net/blog/WX20180620-225634.png" alt=""></p>
+</div></article></div></main><footer><div class="paginator"><a href="/2018/07/05/Database concurrency control note/" class="prev">上一篇</a><a href="/2018/05/23/Database Storage and Buffer pools note/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2018/06/20/Database join algorithm note/';
+var disqus_title = 'Database join algorithm note';
+var disqus_url = 'http://threezj.com/2018/06/20/Database join algorithm note/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>

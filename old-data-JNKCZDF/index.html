@@ -1,0 +1,133 @@
+<!DOCTYPE html><html lang="zh-cn"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 一派胡言</title><meta name="description" content="我向往安静且自由的生活"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://threezj.com/atom.xml" title="一派胡言"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/favicon.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link active">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="/about/" target="_self" class="nav-list-link">ABOUT</a></li><li class="nav-list-item"><a href="https://github.com/zyycj" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><main class="container"><ul class="home post-list"><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/03/04/ARIES/" class="post-title-link">ARIES Recovery 算法</a></h2><div class="post-info">2019年3月4日</div><div class="post-content"><h2 id="ARIES"><a href="#ARIES" class="headerlink" title="ARIES"></a>ARIES</h2><p>该算法在1992的时候被提出，几乎所有db都用ARIES来做recovery，或着是它的变种，可见其地位。ARIES的核心思想如下。</p>
+<ul>
+<li><p>Write-Ahead Logging</p>
+<p>在内存中的所有修改，都要以log的形式在data之前刷到磁盘</p>
+</li>
+<li><p>Redo</p>
+<p>重启的时候，对所有已提交的事务做redo</p>
+</li>
+<li><p>undo</p>
+<p>重启的时候，对所有未提交的事务做undo</p>
+</li>
+</ul>
+<p>ARIES的前提是该数据库是STEAL + NO-FORSE。否则事情就简单了，不需要用ARIES这么复杂。</p>
+<ul>
+<li><p>STEAl</p>
+<p>允许未提交的事务将dirty data刷到磁盘</p>
+</li>
+<li><p>NO-FORSE</p>
+<p>在事务提交之后，不强制立即将所有dirty data刷到磁盘</p>
+</li>
+</ul>
+<p>可见最简单的实现当然是NO-STEAL + FORSE，但是性能低。而且当机器的内存不足以支撑事务所需要的大小时，也不可行。<br></div><a href="/2019/03/04/ARIES/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/01/28/mvcc1/" class="post-title-link">论文笔记 [VLDB '17] An Empirical Evaluation of In-Memory Multi-Version Concurrency Control</a></h2><div class="post-info">2019年1月28日</div><div class="post-content"><h2 id="Snapshot-Isolation-SI"><a href="#Snapshot-Isolation-SI" class="headerlink" title="Snapshot Isolation(SI)"></a>Snapshot Isolation(SI)</h2><p>MVCC天生是属于SI隔离级别的。SI表示每个事务开始的时候看到的是一个独立的snapshot，在提交的时候如果write未冲突即成功。在SI下会有write skew的异常情况。</p>
+<p>write skew可以用白球黑球的例子来说明。比如说现在有一堆球，一半是黑的，一半是白的。现在执行两个事务txn1，txn2。</p>
+<ul>
+<li>txn1把黑球变成白球</li>
+<li>txn2把白球变成黑球</li>
+</ul>
+<p>如果是SERIALIZABLE隔离级别的，那就相当于事务顺序执行, 最后的结果肯定是全黑或者全白。但如果是SI，两个事务都看到相同的snapshot，并在这基础上修改，就很有可能出现还是一半黑一半白的情况。</p>
+<p>只要在range scan的情况下会出现write skew, point update不会有这种情况。</p>
+<h2 id="Multi-version-Concurrency-Control-MVCC"><a href="#Multi-version-Concurrency-Control-MVCC" class="headerlink" title="Multi-version Concurrency Control (MVCC)"></a>Multi-version Concurrency Control (MVCC)</h2><p>MVCC是目前最流行事务并发管理的方式。根据字面含义，DBMS会创建多个物理的tuple版本，根据事务版本选择对应的tuple版本返回给当前的事务。MVCC有很多优势，如下。</p>
+<ul>
+<li><p>writer do not block reader.</p>
+<p>需要注意的是，MVCC并不意味只不上锁。比如一个事务t1在写某一个tuple A1，会先对A1上锁，然后生成A2。这个时候假如事务t2要读A1是不行的，只能读A1之前的版本，因为此时t1还没有提交。所以这里的读写互不阻塞指的是事务级别的，写事务不阻塞读事务，不必像2PL那样等到别的事务提交之后才能拿到锁继续执行。</p>
+</li>
+<li><p>Read-only transactions can read a consistent snapshot without acquiring locks.</p>
+<p>consistent指的是所有已提交的事务所做的修改。</p>
+</li>
+<li><p>Easily support time-travel queries.</p>
+<p>很容易追溯过去的版本</p>
+</li>
+</ul>
+<p>一般MVCC的单个tuple含有txn-id(tid), begin-ts, end-ts, pointer这几个字段，不同算法会略有不同。</p>
+<p>MVCC涉及到很多数据库设计方式。比如MVCC需要和别的Concurrency Control ptotocol搭配使用，例如T/O, OCC, 2PL等 。主要有四个关键的设计决策。</p>
+<ul>
+<li>Concurrency Control ptotocol</li>
+<li>Version Storage</li>
+<li>Garbage Collection</li>
+<li>Index Management</li>
+</ul>
+<p>另外这篇文章不考虑range scan，没有phantoms，所以下面描述的算法都是serializable isolation。该文主要讨论的是in-memory database, 和disk-based DBMS有很多区别，比如write-lock 是直接内嵌在tuple上的，当有事务修改tuple时，会将该tuple的txn-id设置为事务的tid，相当于上了锁，事务提交后将txn-id设为0。</p>
+<p>下面是一张论文对现有数据库设计的调研结果。</p>
+<p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20190128-220955%402x.png" alt=""><br></div><a href="/2019/01/28/mvcc1/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2019/01/24/occ-silo/" class="post-title-link">论文笔记 [SOSP '13] Speedy Transactions in Multicore In-Memory Databases</a></h2><div class="post-info">2019年1月24日</div><div class="post-content"><h2 id="Timestamp-Ordering-T-O"><a href="#Timestamp-Ordering-T-O" class="headerlink" title="Timestamp Ordering(T/O)"></a>Timestamp Ordering(T/O)</h2><p>比较广义的分类型的话，总共有两种Concurrency Control Protocol</p>
+<ol>
+<li><p>Two Phase Locking(悲观)</p>
+<p>假设事务会冲突，提前加上锁。会有死锁的可能</p>
+</li>
+<li><p>Timestamp Ordering(乐观)</p>
+<p>假设事务冲突比较少，执行阶段不加锁，在commit阶段才会检查冲突，若冲突则abort</p>
+</li>
+</ol>
+<p>T/O定义的比较广泛，总之就是根据timestamp来确定事务顺序的，都归于T/O，包括basic T/O, Optimistic Concurrency Control(OCC), MVCC都属于T/O。<br></div><a href="/2019/01/24/occ-silo/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2018/11/12/gfs/" class="post-title-link">论文笔记 [SOSP '03] The Google File System</a></h2><div class="post-info">2018年11月12日</div><div class="post-content"><p>google file system， 谷歌经典论文之一。GFS通过single master，Garbage Collection，control path 与data path分离等机制，很好的在便宜机器上实现了Availability, recoverability, High throughput。但是GFS针对的是特定的workloads（写一次，读多次，大批量的读等），并且需要appication支持, 以避免不一致数据的情况。</p>
+<h2 id="Assumptions"><a href="#Assumptions" class="headerlink" title="Assumptions"></a>Assumptions</h2><p>既然是google file system，当然是针对google的应用场景做的优化。这篇发在03年的sosp，现在workloads已经变了很多了，gfs已经有了第二代Colossus，不过没paper出来。</p>
+<ul>
+<li>便宜的设备，会经常损坏(fault tolerate)</li>
+<li>大量的大文件，基本都在100MB以上或者更大，GB级别的文件是很常见的</li>
+<li>read workloads:  Mostly large streaming reads（1MB or more）和Some sorted random reads(a few KB)。</li>
+<li>write workloads: many large，sequential write。append居多。写一次，读多次。</li>
+<li>多用户并发向同一个文件进行append操作</li>
+<li>google的大都是高速批量写入的应用，所以它更要求持久稳定的带宽。</div><a href="/2018/11/12/gfs/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2018/11/02/pebblesdb/" class="post-title-link">论文笔记 [SOSP '17] PebblesDB, Building Key-Value Stores using Fragmented Log-Structured Merge Trees.</a></h2><div class="post-info">2018年11月2日</div><div class="post-content"><p>PebblesDB为了减少写放大，同时又不影响读的效率，提出了一种类似于skiplist的方式来建立LSM-Tree，叫做Fragmented Log-Structured Merge Trees (FLSM)。与rocksdb相比，大概减少了2.4-3倍的写放大，以及6.7倍的write throughput。这篇的idea也比较好懂，用分区的方式来减少compaction，但又可以像skiplist那样来检索，读效率也很高。</p>
+<h2 id="Problems"><a href="#Problems" class="headerlink" title="Problems"></a>Problems</h2><p>目前的LSM-Tree存在的写放大在于，它会对每一层的sstable写多次。在每一次compaction的时候，需要将上下两层有overlap的sstable读到内存，进行排序，然后再输出。但是这个操作是多次的，频繁的。当上一层又满了之后，又需要重复一遍上述操作，第二层overlap的sstable，又被写了一遍。</p>
+<p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20181101-233702%402x.png" alt=""><br></div><a href="/2018/11/02/pebblesdb/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2018/10/27/wisckey/" class="post-title-link">论文笔记 [FAST '16] WiscKey, Separating Keys from Values in SSD-conscious Storage</a></h2><div class="post-info">2018年10月27日</div><div class="post-content"><p>LSM-Tree的优势在于借鉴LFS的思想，将大块的内存连续的写出到磁盘，减少磁盘seek的时间。同时输出的格式又是连续的，查找的速度也比较快。但是LSM-Tree的结构，也带来了写放大和读放大的问题。这些影响在hdd上是值得的，但是在ssd上并不友好。WiscKey提出了一种面向ssd的，将key和value分开存储的方法。</p>
+<h2 id="Write-and-Read-Amplification"><a href="#Write-and-Read-Amplification" class="headerlink" title="Write and Read Amplification"></a>Write and Read Amplification</h2><p>写放大主要在于compaction的，每次两层之间做compact时，都需要将多个sstable读出做排序（读放大），再写到磁盘。而读放大方面，LSM-Tree需要查找多个数据结构，memtable-&gt;imutable-&gt;level files，假设不存在这个key的，便要把每一层做二分查找搜一遍。特别是第0层，有overlap，需要每个文件都看，虽然有bloom filter，但也影响效率。当value比较大的时候，问题就很明显了，compaction时sstable的读入和写出，都是将key和value一起读一起写的，当value变长时，效率会很低。这些放大的影响在hdd，来换取磁盘seek的消耗还是值得，但是在SSD上就不一样了，SSD随机读写要快的多，并且有并行随机读取的特性可以利用。</p>
+<p><img src="https://zhang.nos-eastchina1.126.net/blog/WX20181027-212041%402x.png" alt=""><br></div><a href="/2018/10/27/wisckey/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2018/10/14/clock/" class="post-title-link">论文笔记 Time, Clocks and the Ordering of Events in a Distributed System</a></h2><div class="post-info">2018年10月14日</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在分布式系统中，如何确定两个事件发生的先后顺序是比较困难的。在不同机器上的物理时钟会有会有误差。Lamport在1978的文章<a href="http://research.microsoft.com/users/lamport/pubs/time-clocks.pdf" target="_blank" rel="noopener">Time, Clocks and the Ordering of Events in a Distributed System” (1978)</a>提出了一种Logical Clock 来描述分布式系统中的先后顺序。论文中先是定义了一种偏序的<code>happened before</code> 关系，通过这种关系给出了logical clock的算法，最后用logical clock实现了全序的分布式算法。</p>
+<h2 id="Happened-before"><a href="#Happened-before" class="headerlink" title="Happened-before"></a>Happened-before</h2><p>Lamport提出用事件发生的先后因果关系来描述事件。若事件b依赖于a发生，则<code>a happened-before b</code>。定义如下。</p>
+<ol>
+<li>If a and b are events in the same process, and a comes before b, then a → b.</li>
+<li>If a is the sending of a message by one process and b is the receipt of the same message by another process, then a → b.</li>
+<li>if a→ b and b → c then a→c. </li>
+</ol>
+<p>若相互之间没有依赖关系，可认为是并行的。并发说明这两个事件谁先发生并不重要，这其实逻辑时钟的重要思想。Logical clock只保证你的系统不出错（即不违反相互依赖关系），而不能保证事件发生的真实顺序。<br></div><a href="/2018/10/14/clock/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2018/09/26/paxos/" class="post-title-link">论文笔记 Paxos made simple</a></h2><div class="post-info">2018年9月26日</div><div class="post-content"><h2 id="Basic-Paxos"><a href="#Basic-Paxos" class="headerlink" title="Basic Paxos"></a>Basic Paxos</h2><blockquote>
+<p>The Paxos algorithm, when presented in plain English, is very simple. </p>
+</blockquote>
+<p>Paxos有许多变种，一般来说都是指的Basic Paxos，也就是这篇论文里提出来的内容。下面没有特殊说明，都是指的Basic Paxos。</p>
+<p>Paxos需要保证的是两个特性。</p>
+<ol>
+<li><p>safety</p>
+<ul>
+<li>Only a value that has been proposed may be chosen</li>
+<li>Only a single value is chosen, and</li>
+<li>A process never learns that a value has been chosen unless it actually has been.</li>
+</ul>
+</li>
+<li><p>liveness</p>
+<ul>
+<li>Some proposed value is eventually chosen</li>
+<li>If a value is chosen, servers eventually learn about it</li>
+</ul>
+</li>
+</ol>
+<p>Paxos和raft一样也划分了三种角色，但是和raft的不同的是一台机器可以同时扮演这三个角色。</p>
+<ul>
+<li><p>Proposer</p>
+</li>
+<li><p>Acceptor</p>
+</li>
+<li><p>Learner</p>
+</li>
+</ul></div><a href="/2018/09/26/paxos/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2018/08/20/NFS vs AFS/" class="post-title-link">NFS vs AFS</a></h2><div class="post-info">2018年8月20日</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>周末读了ostep的两篇文章<a href="http://pages.cs.wisc.edu/~remzi/OSTEP/dist-nfs.pdf" target="_blank" rel="noopener">Sun’s Network File System</a>和<a href="http://pages.cs.wisc.edu/~remzi/OSTEP/dist-afs.pdf" target="_blank" rel="noopener">The Andrew File System</a>，都是讲的分布式文件系统，但是侧重的方向不同，导致相关实现也全然不同，写篇笔记对比一下。</p>
+<h2 id="NFS"><a href="#NFS" class="headerlink" title="NFS"></a>NFS</h2><p>NFS的goal是fast crash recovery and simple，所以它的设计都是为这个目的服务。</p>
+<h4 id="key-design"><a href="#key-design" class="headerlink" title="key design"></a>key design</h4><ul>
+<li><p>stateless  </p>
+<p>server不保存任何有关client的状态。假如crash，不用做任何操作，直接重启即可。这是一个最重要的设计。需要的信息都通过rpc的参数传递过来。</p>
+</li>
+<li><p>idempotent</p>
+<p>接口都做到幂等性，这样做主要是为了处理message lost 或者 server crash这些情况，client只需要retry即可。</p>
+</li>
+<li><p>client-cache</p>
+<p>这主要为性能考虑，但同时为带来一致性问题。NFS通过前先通过getattr request发送给server，查看cache是否过期，一般是周期性的问一下，比如所3s。同时在close的时候将cache刷回server。</p></div><a href="/2018/08/20/NFS vs AFS/" class="read-more">...阅读全文</a></article></li><li class="post-list-item"><article class="post-block"><h2 class="post-title"><a href="/2018/07/05/Database concurrency control note/" class="post-title-link">Database concurrency control note</a></h2><div class="post-info">2018年7月5日</div><div class="post-content"><h2 id="Locking-in-B-Tree"><a href="#Locking-in-B-Tree" class="headerlink" title="Locking in B+Tree"></a>Locking in B+Tree</h2><p>使用2PL在index上效果会很差，因为每次使用索引时都会lock root，导致其他事务无法访问。Index一般使用<code>Lock crabbing</code>。</p>
+<h4 id="Basic-Lock-Crabbing"><a href="#Basic-Lock-Crabbing" class="headerlink" title="Basic Lock Crabbing"></a>Basic Lock Crabbing</h4><ol>
+<li>search<ul>
+<li>获取parent的S lock</li>
+<li>接着到下一层获取child的S lock</li>
+<li>释放上一层parent的S lock，如此循环。</li>
+</ul>
+</li>
+<li>insert/delete<ul>
+<li>获取parent的X lock</li>
+<li>到下一层，获取child的X lock</li>
+<li>如果安全的话则释放parent的X lock。安全即是指child没有分裂或者合并。也就是说有足够的空间插入，或者足够多的节点删除。不然继续到一层，如此循环。</li>
+</ul>
+</li>
+</ol>
+<p>在删除或者插入的情况下，如果节点都满或者都不够的话很有可能整条链上都有锁，一直到leaf节点才会逐级向上释放，并发性比较差，由此引入一种优化的方案。<br></div><a href="/2018/07/05/Database concurrency control note/" class="read-more">...阅读全文</a></article></li></ul></main><footer><div class="paginator"><a href="/page/2/" class="next">下一页</a></div><div class="copyright"><p>© 2015 - 2019 <a href="http://threezj.com">Jian Zhang</a>, powered by <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/pinggod/hexo-theme-apollo" target="_blank">hexo-theme-apollo</a>.</p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script></body></html>
